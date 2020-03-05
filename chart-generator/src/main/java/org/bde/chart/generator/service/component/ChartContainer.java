@@ -1,6 +1,5 @@
 package org.bde.chart.generator.service.component;
 
-import org.jfree.chart.ChartPanel;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
