@@ -1,0 +1,20 @@
+apply plugin: 'org.springframework.boot'
+apply plugin: 'application'
+
+mainClassName = 'org.bde.chart.generator.Application'
+
+springBoot {
+    buildInfo()
+}
+
+bootRun {
+    systemProperty 'java.awt.headless', 'true'
+    jvmArgs += "-Djava.awt.headless=true"
+}
+
+dependencies {
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter'
+    compile group: 'jfree', name: 'jfreechart', version: '1.0.13'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}

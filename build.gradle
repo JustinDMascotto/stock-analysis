@@ -1,0 +1,37 @@
+plugins{
+    id 'org.springframework.boot' version '2.2.5.RELEASE' apply false
+}
+
+ext {
+    springBootVersion = "2.2.5.RELEASE"
+}
+
+
+apply plugin: 'idea'
+
+subprojects {
+    apply plugin: 'java-library'
+    apply plugin: 'io.spring.dependency-management'
+
+    dependencyManagement {
+        imports {
+            mavenBom org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+        }
+    }
+
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+
+    version = '0.0.1'
+    group 'bde'
+
+    repositories {
+        mavenCentral()
+        mavenLocal()
+    }
+
+    dependencies {
+        compileOnly 'org.projectlombok:lombok:1.18.4'
+        annotationProcessor 'org.projectlombok:lombok:1.18.4'
+    }
+}
