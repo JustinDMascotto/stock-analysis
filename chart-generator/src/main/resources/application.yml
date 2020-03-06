@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: stock-analysis
+  datasource:
+    type: org.apache.tomcat.jdbc.pool.DataSource
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+
+bde:
+  stock-analysis:
+    datasource:
+      url: jdbc:postgresql://${DB_HOST}:${DB_TCP_5432}/${DB_NAME:stockdata}
+      username: ${DB_USERNAME:dev}
+      password: ${DB_PASSWORD:dev}
+      driver-class-name: org.postgresql.Driver

@@ -37,7 +37,7 @@ public class CandlestickChart
     {
         final JFreeChart candlestickChart = createChart();
         chartPanel = new ChartPanel( candlestickChart );
-        chartPanel.setPreferredSize( new Dimension( 500, 500 ) );
+        chartPanel.setPreferredSize( new Dimension( 200, 200 ) );
         add( chartPanel, BorderLayout.CENTER );
     }
 

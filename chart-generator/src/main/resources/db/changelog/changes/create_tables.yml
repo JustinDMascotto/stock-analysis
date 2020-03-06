@@ -1,0 +1,46 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: create_stock_candle_table
+      author: jmascotto
+      changes:
+        - createTable:
+            tableName: stock_candle
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: ticker
+                  type: TEXT
+              - column:
+                  name: open
+                  type: DOUBLE
+              - column:
+                  name: high
+                  type: DOUBLE
+              - column:
+                  name: low
+                  type: BIGINT
+              - column:
+                  name: close
+                  type: DOUBLE
+              - column:
+                  name: volume
+                  type: INTEGER
+              - column:
+                  name: timestamp
+                  type: TIMESTAMP
+              - column:
+                  name: interval
+                  type: INTEGER
+
+  - changeSet:
+      id: create_stock_candle_seq
+      author: jmascotto
+      changes:
+        - createSequence:
+            sequenceName: stock_candle_seq
+            startValue: 1000
