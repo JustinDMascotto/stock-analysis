@@ -1,11 +1,15 @@
 package org.bde.chart.generator.model;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 
 @Data
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Candle
 {
     private long timestamp;
@@ -19,6 +23,8 @@ public class Candle
     private double high;
 
     private double low;
+
+    private double vwap;
 
     private int volume;
 }

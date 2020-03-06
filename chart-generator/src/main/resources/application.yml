@@ -10,6 +10,8 @@ spring:
 bde:
   stock-analysis:
     list-of-stocks: AAPL,AMD,MSFT,NVDA,TSLA,BAC,ROKU,INTC,UAL
+    image-generator:
+      output-dir: /home/justin/Desktop/StockImages/
     datasource:
       url: jdbc:postgresql://${DB_HOST}:${DB_TCP_5432}/${DB_NAME:stockdata}
       username: ${DB_USERNAME:dev}

@@ -3,6 +3,7 @@ package org.bde.chart.generator.service;
 import org.bde.chart.generator.model.Candle;
 import org.bde.chart.generator.service.component.CandlestickChart;
 import org.bde.chart.generator.service.component.ImageContainer;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -19,6 +20,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
+import java.util.List;
 
 
 @Service
@@ -26,8 +28,18 @@ public class ImageGeneratorService
 {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" );
 
+    private static final String BUY_FOLDER = "Buy";
 
-    public void generateGraph()
+    private static final String SELL_FOLDER = "Sell";
+
+    private static final String DO_NOTHING_FOLDER = "Nothing";
+
+    @Value( "${bde.stock-analysis.image-generator.output-dir}" )
+    private String outputDir;
+
+
+    public void generateGraphs( final String ticker,
+                                final List<Integer> outputIntervals )
           throws IOException, InterruptedException
     {
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();

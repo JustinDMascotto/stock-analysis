@@ -56,7 +56,7 @@ public class Application
                     dataRetriever.maybeRetrieveData( ticker, 1 );
                     return null;
                 } );
-                //            imageGeneratorService.generateGraph();
+                //            imageGeneratorService.generateGraphs( ticker );
             }
             catch ( final Exception ex )
             {
