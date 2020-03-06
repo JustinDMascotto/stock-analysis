@@ -1,0 +1,7 @@
+databaseChangeLog:
+  - changeSet:
+      id: add-index-date-ticket
+      author: jmascotto
+      changes:
+        - sql:
+            sql: "CREATE INDEX date_ticker_idx ON stock_candle ( DATE( timestamp ), ticker );"

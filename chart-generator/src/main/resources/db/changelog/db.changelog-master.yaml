@@ -1,3 +1,5 @@
 databaseChangeLog:
   - include:
       file: db/changelog/changes/create_tables.yml
+  - include:
+      file: db/changelog/changes/create_indices.yml
