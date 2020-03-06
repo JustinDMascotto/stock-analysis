@@ -19,7 +19,9 @@ public interface StockCandleRepository
             "FROM stock_candle sc " +
             "WHERE DATE(sc.timestamp) = DATE(:date) " +
             "AND sc.ticker = :ticker " +
+            "AND sc.interval = :interval " +
             "ORDER BY sc.timestamp DESC" )
     List<StockCandleEntity> findByTimestampAndTicker( @Param( "date" ) final LocalDate date,
-                                                      @Param( "ticker" ) final String ticker );
+                                                      @Param( "ticker" ) final String ticker,
+                                                      @Param( "interval" ) final Integer interval );
 }

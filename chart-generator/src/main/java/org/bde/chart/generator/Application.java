@@ -1,5 +1,6 @@
 package org.bde.chart.generator;
 
+import io.github.bucket4j.Refill;
 import lombok.extern.slf4j.Slf4j;
 import org.bde.chart.generator.service.ImageGeneratorService;
 import org.bde.chart.generator.service.HistoricalDataRetriever;
@@ -45,14 +46,14 @@ public class Application
     {
         System.setProperty( "java.awt.headless", "false" );
         final IAppLocalRateLimiter apiRateLimiter = new Bucket4JAppLocalRateLimiter( 1,
-                                                                                     Duration.of( 1, ChronoUnit.MINUTES ),
+                                                                                     Refill.greedy( 1, Duration.of( 30, ChronoUnit.SECONDS ) ),
                                                                                      Duration.of( 2, ChronoUnit.MINUTES ),
                                                                                      "ApiRateLimiter" );
         tickers.forEach( ticker -> {
             try
             {
                 apiRateLimiter.call( () -> {
-                    dataRetriever.maybeRetrieveData( ticker, 5 );
+                    dataRetriever.maybeRetrieveData( ticker, 1 );
                     return null;
                 } );
                 //            imageGeneratorService.generateGraph();

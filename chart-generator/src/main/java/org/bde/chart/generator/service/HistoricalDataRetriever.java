@@ -32,6 +32,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+
 @Slf4j
 @Service
 public class HistoricalDataRetriever
@@ -73,7 +74,8 @@ public class HistoricalDataRetriever
             do
             {
                 latestDatesCandles.addAll( repo.findByTimestampAndTicker( searchDate,
-                                                                          ticker ) );
+                                                                          ticker,
+                                                                          interval ) );
                 searchDate = searchDate.minusDays( 1 );
             }
             while ( latestDatesCandles.isEmpty() &&
@@ -102,7 +104,6 @@ public class HistoricalDataRetriever
         catch ( final Exception ex )
         {
             log.error( "Exception while pulling historical data.", ex );
-            System.exit( -1 );
         }
     }
 
@@ -121,7 +122,7 @@ public class HistoricalDataRetriever
           throws Exception
     {
         final var response = queryApi( String.format( VWAP_URL_TEMPLATE, ticker, interval.toString() ) );
-        return parseVwapResponse( response.getBody() );
+        return parseVwapResponse( response.getBody(), interval );
     }
 
 
@@ -145,10 +146,10 @@ public class HistoricalDataRetriever
           throws Exception
     {
         final var node = MAPPER.readTree( jsonBody );
-        final var timeSeries = node.get( "Time Series (5min)" );
-        return IntStream.range( 0, 13000 )
+        final var timeSeries = node.get( String.format( "Time Series (%smin)", interval ) );
+        return IntStream.range( 0, 20000 )
                         .mapToObj( i -> {
-                            final var candleTime = LocalDateTime.of( LocalDate.now( ZoneId.of( "America/New_York" ) ), LocalTime.of( 14, 0, 0 ) ).minusMinutes( 5 * i );
+                            final var candleTime = LocalDateTime.of( LocalDate.now( ZoneId.of( "America/New_York" ) ), LocalTime.of( 14, 0, 0 ) ).minusMinutes( interval * i );
                             return Optional.ofNullable( timeSeries.get( candleTime.format( OHLC_DATE_TIME_FORMATTER ) ) )
                                            .map( candle -> StockCandleEntity.builder()
                                                                             .timestamp( candleTime )
@@ -166,14 +167,15 @@ public class HistoricalDataRetriever
     }
 
 
-    private Map<LocalDateTime, Double> parseVwapResponse( final String jsonBody )
+    private Map<LocalDateTime, Double> parseVwapResponse( final String jsonBody,
+                                                          final Integer interval )
           throws Exception
     {
         final var node = MAPPER.readTree( jsonBody );
         final var technicalAnalysis = node.get( "Technical Analysis: VWAP" );
-        return IntStream.range( 0, 13000 )
+        return IntStream.range( 0, 20000 )
                         .mapToObj( i -> {
-                            final var candleTime = LocalDateTime.of( LocalDate.now( ZoneId.of( "America/New_York" ) ), LocalTime.of( 14, 0, 0 ) ).minusMinutes( 5 * i );
+                            final var candleTime = LocalDateTime.of( LocalDate.now( ZoneId.of( "America/New_York" ) ), LocalTime.of( 14, 0, 0 ) ).minusMinutes( interval * i );
                             return Optional.ofNullable( technicalAnalysis.get( candleTime.format( VWAP_DATE_TIME_FORMATTER ) ) )
                                            .map( vwapValueNode -> {
                                                final JsonNode vwap = vwapValueNode.get( "VWAP" );

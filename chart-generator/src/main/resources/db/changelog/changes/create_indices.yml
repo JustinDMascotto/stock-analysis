@@ -4,4 +4,4 @@ databaseChangeLog:
       author: jmascotto
       changes:
         - sql:
-            sql: "CREATE INDEX date_ticker_idx ON stock_candle ( DATE( timestamp ), ticker );"
+            sql: "CREATE INDEX date_ticker_idx ON stock_candle ( DATE( timestamp ), ticker, interval );"
