@@ -10,6 +10,8 @@ public class Candle
 {
     private long timestamp;
 
+    private int interval;
+
     private double open;
 
     private double close;

@@ -22,7 +22,7 @@ import java.util.Arrays;
 
 
 @Service
-public class ChartGeneratorService
+public class ImageGeneratorService
 {
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" );
 

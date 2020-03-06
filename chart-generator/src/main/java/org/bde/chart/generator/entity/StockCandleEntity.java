@@ -40,6 +40,8 @@ public class StockCandleEntity
 
     private Double low;
 
+    private Double vwap;
+
     private Integer volume;
 
     private Integer interval;

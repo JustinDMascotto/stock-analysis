@@ -28,6 +28,9 @@ databaseChangeLog:
                   name: close
                   type: DOUBLE
               - column:
+                  name: vwap
+                  type: DOUBLE
+              - column:
                   name: volume
                   type: INTEGER
               - column:

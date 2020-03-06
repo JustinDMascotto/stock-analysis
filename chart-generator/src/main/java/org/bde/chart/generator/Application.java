@@ -1,13 +1,20 @@
 package org.bde.chart.generator;
 
 import lombok.extern.slf4j.Slf4j;
-import org.bde.chart.generator.service.ChartGeneratorService;
-import org.bde.chart.generator.service.StockDataRetriever;
+import org.bde.chart.generator.service.ImageGeneratorService;
+import org.bde.chart.generator.service.HistoricalDataRetriever;
+import org.bde.chart.generator.util.Bucket4JAppLocalRateLimiter;
+import org.bde.chart.generator.util.IAppLocalRateLimiter;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 
 
 @Slf4j
@@ -17,31 +24,45 @@ public class Application
       implements CommandLineRunner
 {
     @Autowired
-    private ChartGeneratorService chartGeneratorService;
+    private ImageGeneratorService imageGeneratorService;
 
     @Autowired
-    private StockDataRetriever dataRetriever;
+    private HistoricalDataRetriever dataRetriever;
+
+    @Value( "${bde.stock-analysis.list-of-stocks}" )
+    private List<String> tickers;
+
 
     public static void main( String[] args )
     {
         SpringApplication.run( Application.class, args );
     }
 
+
     @Override
     public void run( String... args )
           throws Exception
     {
-        System.setProperty("java.awt.headless", "false");
-        try
-        {
-            dataRetriever.maybeRetrieveData( "AAPL", 5 );
-            chartGeneratorService.generateGraph();
-        }
-        catch ( final Exception ex )
-        {
-            log.error( "There was an issue while running the NMFTA update task.", ex );
-        }
-        // Exit 0 no matter what so kubernetes doesnt try to re-run the job indefinitely if there is an issue.
+        System.setProperty( "java.awt.headless", "false" );
+        final IAppLocalRateLimiter apiRateLimiter = new Bucket4JAppLocalRateLimiter( 1,
+                                                                                     Duration.of( 1, ChronoUnit.MINUTES ),
+                                                                                     Duration.of( 2, ChronoUnit.MINUTES ),
+                                                                                     "ApiRateLimiter" );
+        tickers.forEach( ticker -> {
+            try
+            {
+                apiRateLimiter.call( () -> {
+                    dataRetriever.maybeRetrieveData( ticker, 5 );
+                    return null;
+                } );
+                //            imageGeneratorService.generateGraph();
+            }
+            catch ( final Exception ex )
+            {
+                log.error( "There was an issue while running the NMFTA update task.", ex );
+            }
+        } );
+
         System.exit( 0 );
     }
 }
