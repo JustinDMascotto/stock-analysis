@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.bde.chart.generator.entity.StockCandleEntity;
+import org.bde.chart.generator.util.IAppLocalRateLimiter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.util.Pair;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -13,11 +16,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import org.bde.chart.generator.repository.StockCandleRepository;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -48,9 +53,16 @@ public class HistoricalDataRetriever
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
+    @Autowired
+    private IAppLocalRateLimiter rateLimiter;
+
     private final RestTemplate restTemplate;
 
     private final StockCandleRepository repo;
+
+
+    @Value( "${bde.stock-analysis.list-of-stocks}" )
+    private List<String> tickers;
 
 
     public HistoricalDataRetriever( final StockCandleRepository repo )
@@ -63,8 +75,21 @@ public class HistoricalDataRetriever
     }
 
 
-    public void maybeRetrieveData( final String ticker,
-                                   final Integer interval )
+    @Scheduled( fixedDelay = 70000,
+                initialDelay = 50000000 )
+    public void retrieveData()
+    {
+        tickers.forEach( ticker -> {
+            rateLimiter.call( () -> {
+                maybeRetrieveData( ticker, 1 );
+                return null;
+            } );
+        } );
+    }
+
+
+    void maybeRetrieveData( final String ticker,
+                            final Integer interval )
     {
         try
         {
@@ -82,8 +107,9 @@ public class HistoricalDataRetriever
                     !searchDate.isBefore( LocalDate.now().minusDays( 7 ) ) );
 
             if ( latestDatesCandles.isEmpty() ||
-                 latestDatesCandles.get( 0 ).getTimestamp().isBefore( LocalDateTime.of( LocalDate.now(), LocalTime.of( 14, 0, 0 ) ) ) )
-
+                 ( latestDatesCandles.get( 0 ).getTimestamp().isBefore( LocalDateTime.of( LocalDate.now(), LocalTime.of( 16, 0, 0 ) ) ) &&
+                   !( latestDatesCandles.get( 0 ).getTimestamp().toLocalDate().getDayOfWeek() == DayOfWeek.FRIDAY &&
+                     ( LocalDate.now().getDayOfWeek() == DayOfWeek.SUNDAY || LocalDate.now().getDayOfWeek() == DayOfWeek.SATURDAY ) ) ) )
             {
                 final var mapOfCandles = getCandles( ticker, interval );
 

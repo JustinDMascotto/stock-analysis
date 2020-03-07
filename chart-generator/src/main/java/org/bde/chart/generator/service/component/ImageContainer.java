@@ -29,6 +29,6 @@ public class ImageContainer
         contentPane = frame.getContentPane();
 
         frame.pack();
-        frame.setVisible( true );
+//        frame.setVisible( true );
     }
 }

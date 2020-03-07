@@ -1,6 +1,7 @@
 package org.bde.chart.generator.util;
 
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.ObjectUtils;
 import org.bde.chart.generator.entity.StockCandleEntity;
 
 import java.time.LocalDateTime;
@@ -71,7 +72,7 @@ public class CandleConverterUtil
             final double tmpClose = candle.getClose();
             final int[] tmpVolume = { candle.getVolume() };
             final double[] vwap = { candle.getVwap() };
-            final int[] divisor = { 0 };
+            final int[] divisor = { 1 };
             IntStream.range( 1, numCandlesToMerge )
                      .forEach( i -> {
                          final LocalDateTime candleTimestamp = candle.getTimestamp().minusMinutes( candle.getInterval() * i );
@@ -82,7 +83,7 @@ public class CandleConverterUtil
                              final var mergeCandle = possibleMergeCandle.get();
                              tmpHigh[0] = tmpHigh[0] > mergeCandle.getHigh() ? tmpHigh[0] : mergeCandle.getHigh();
                              tmpLow[0] = tmpLow[0] < mergeCandle.getLow() ? tmpLow[0] : mergeCandle.getLow();
-                             vwap[0] = vwap[0] + mergeCandle.getVwap();
+                             vwap[0] = vwap[0] + ObjectUtils.defaultIfNull( mergeCandle.getVwap(), vwap[0] );
                              tmpVolume[0] = tmpVolume[0] + mergeCandle.getVolume();
                              if ( numCandlesToMerge - 1 == i )
                              {

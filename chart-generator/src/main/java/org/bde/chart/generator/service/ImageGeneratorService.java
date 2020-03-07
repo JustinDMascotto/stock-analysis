@@ -2,6 +2,7 @@ package org.bde.chart.generator.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.bde.chart.generator.entity.StockCandleEntity;
 import org.bde.chart.generator.repository.StockCandleRepository;
@@ -9,7 +10,10 @@ import org.bde.chart.generator.service.component.CandlestickChart;
 import org.bde.chart.generator.service.component.ImageContainer;
 import org.bde.chart.generator.util.CandleConverterUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import javax.imageio.ImageIO;
@@ -19,7 +23,11 @@ import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.DayOfWeek;
+import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -30,9 +38,12 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toMap;
+
 
 @Slf4j
 @Service
@@ -41,6 +52,8 @@ public class ImageGeneratorService
     private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern( "yyyy-MM-dd HH:mm:ss" );
 
     private static final LocalTime MARKET_CLOSE = LocalTime.of( 16, 0, 0 );
+
+    private static final LocalTime MARKET_OPEN = LocalTime.of( 9, 30, 0 );
 
     private static final String BUY_FOLDER = "Buy/";
 
@@ -51,32 +64,53 @@ public class ImageGeneratorService
     @Value( "${bde.stock-analysis.image-generator.output-dir}" )
     private String outputDir;
 
+    @Value( "${bde.stock-analysis.list-of-stocks}" )
+    private List<String> tickers;
+
     @Autowired
     private StockCandleRepository repo;
 
+    @Autowired
+    @Qualifier( "chartImageGeneratorExecutor" )
+    private TaskExecutor executor;
 
-    public void generateGraphs( final String ticker )
-          throws IOException, InterruptedException
+
+    @Scheduled( initialDelay = 2000,
+                fixedDelay = 4000000 )
+    public void generateGraphs()
+          throws Exception
+    {
+        System.setProperty( "java.awt.headless", "false" );
+
+        cleanDirectory();
+
+        tickers.forEach( ticker -> {
+            try
+            {
+                generateGraphs( ticker );
+            }
+            catch ( Exception e )
+            {
+                log.error( "There was an error.", e );
+            }
+        } );
+
+        log.info( "Completed generating images." );
+    }
+
+
+    void generateGraphs( final String ticker )
     {
         final StockCandleEntity earliestCandle = repo.findEarliestByTickerAndInterval( ticker, 1 );
         LocalDate queryDate = earliestCandle.getTimestamp().toLocalDate();
-        final DayOfWeek dayOfWeek = DayOfWeek.from( queryDate );
-        while ( dayOfWeek.getValue() < 6 &&
-                !queryDate.isAfter( LocalDate.now() ) )
+//        final DayOfWeek dayOfWeek = DayOfWeek.from( queryDate ); //TODO: not needed
+        while ( !queryDate.isAfter( LocalDate.now() ) )
         {
             final List<StockCandleEntity> candles = repo.findByTimestampAndTicker( queryDate, ticker, 1 );
 
             if ( CollectionUtils.isNotEmpty( candles ) )
             {
-                final LinkedHashMap<LocalDateTime, StockCandleEntity> oneMinuteCandleOrdered = candles.stream().sorted( compareLocalDateTimes ).collect( toMap( StockCandleEntity::getTimestamp, e -> e, ( e1, e2 ) -> e1, LinkedHashMap::new ) );
-
-                fillInMissingCandles( oneMinuteCandleOrdered );
-                final LinkedHashMap<LocalDateTime, StockCandleEntity> fiveMinuteCandleOrdered = CandleConverterUtil.convertCandlesAndOrder( oneMinuteCandleOrdered, 5 );
-                final LinkedHashMap<LocalDateTime, StockCandleEntity> fifteenMinuteCandleOrdered = CandleConverterUtil.convertCandlesAndOrder( fiveMinuteCandleOrdered, 15 );
-
-                final int fifteenMinuteCandleWindowSize = 10; //10 candles in images
-                IntStream.range( 3, fifteenMinuteCandleOrdered.size() - fifteenMinuteCandleWindowSize - 1 )
-                         .forEach( i -> createImage( fifteenMinuteCandleWindowSize, i, fiveMinuteCandleOrdered, fifteenMinuteCandleOrdered ) );
+                createImagesAsync( candles, queryDate, ticker );
             }
             else
             {
@@ -86,6 +120,38 @@ public class ImageGeneratorService
             }
             queryDate = queryDate.plusDays( 1 );
         }
+    }
+
+
+    void createImagesAsync( final List<StockCandleEntity> candles,
+                            final LocalDate queryDate,
+                            final String ticker )
+    {
+        CompletableFuture.supplyAsync( () -> {
+                                           final LinkedHashMap<LocalDateTime, StockCandleEntity> oneMinuteCandleOrdered = candles.stream().sorted( compareLocalDateTimes ).collect( toMap( StockCandleEntity::getTimestamp, e -> e, ( e1, e2 ) -> e1, LinkedHashMap::new ) );
+
+                                           final LocalDate currentDate = queryDate;
+                                           fillInMissingOneMinuteCandles( oneMinuteCandleOrdered );
+                                           final LinkedHashMap<LocalDateTime, StockCandleEntity> fiveMinuteCandleOrdered = CandleConverterUtil.convertCandlesAndOrder( oneMinuteCandleOrdered, 5 );
+                                           final LinkedHashMap<LocalDateTime, StockCandleEntity> fifteenMinuteCandleOrdered = CandleConverterUtil.convertCandlesAndOrder( fiveMinuteCandleOrdered, 15 );
+
+                                           final int fifteenMinuteCandleWindowSize = 6; //10 candles in images
+                                           IntStream.range( 3, fifteenMinuteCandleOrdered.size() - fifteenMinuteCandleWindowSize - 1 )
+                                                    .forEach( i -> {
+                                                        try
+                                                        {
+                                                            createImage( fifteenMinuteCandleWindowSize, i, fiveMinuteCandleOrdered, fifteenMinuteCandleOrdered );
+                                                        }
+                                                        catch ( final Exception ex )
+                                                        {
+                                                            log.error( "Exception while making chart for {} on {}",
+                                                                       ticker, currentDate );
+                                                            log.error( ex.getMessage(), ex );
+                                                        }
+                                                    } );
+                                           return null;
+                                       },
+                                       executor );
     }
 
 
@@ -126,7 +192,7 @@ public class ImageGeneratorService
                              .ifPresent( candle -> fiveMinuteCandleStickChart.addCandle( candle, (long) minuteOffsetInFrame - ( i + 1 ) ) );
                  } );
 
-        final ImageContainer container = new ImageContainer( Arrays.asList( fifteenMinuteCandleStickChart ) );
+        final ImageContainer container = new ImageContainer( Arrays.asList( fiveMinuteCandleStickChart ) );
 
         determineBuyOrSell( currentClosed15MinuteCandle, lookAheadCandle, container.getContentPane() );
     }
@@ -139,15 +205,15 @@ public class ImageGeneratorService
         if ( currentClosed15MinuteCandle.getClose() > lookAheadCandle.getClose() )
         {
             //possible sell
-            final double risk = currentClosed15MinuteCandle.getHigh() - currentClosed15MinuteCandle.getClose();
-            if ( risk > 0 && risk > 0.2 )
+            final double risk = ( currentClosed15MinuteCandle.getHigh() ) - ( currentClosed15MinuteCandle.getClose() < currentClosed15MinuteCandle.getOpen() ? currentClosed15MinuteCandle.getClose() : currentClosed15MinuteCandle.getOpen() );
+            if ( risk > 0.1 )
             {
-                if ( currentClosed15MinuteCandle.getClose() - lookAheadCandle.getClose() > 4 * risk )
+                if ( currentClosed15MinuteCandle.getClose() - lookAheadCandle.getClose() > 2 * risk )
                 {
                     //sell
                     toImage( container,
                              StringUtils.appendIfMissing( outputDir, "/", "/" ) +
-                             SELL_FOLDER + currentClosed15MinuteCandle.getTimestamp() + "_" + currentClosed15MinuteCandle.getTicker() + ".png" );
+                             SELL_FOLDER + currentClosed15MinuteCandle.getTicker() + "_" + currentClosed15MinuteCandle.getTimestamp() + ".png" );
 
                     return;
                 }
@@ -156,15 +222,15 @@ public class ImageGeneratorService
         else
         {
             //possible buy
-            final double risk = currentClosed15MinuteCandle.getClose() - currentClosed15MinuteCandle.getLow();
-            if ( risk > 0 && risk > 0.2 )
+            final double risk = ( currentClosed15MinuteCandle.getClose() > currentClosed15MinuteCandle.getOpen() ? currentClosed15MinuteCandle.getClose() : currentClosed15MinuteCandle.getOpen() ) - currentClosed15MinuteCandle.getLow();
+            if ( risk > 0.1 )
             {
-                if ( lookAheadCandle.getClose() - currentClosed15MinuteCandle.getClose() > 4 * risk )
+                if ( lookAheadCandle.getClose() - currentClosed15MinuteCandle.getClose() > 2 * risk )
                 {
                     //buy
                     toImage( container,
                              StringUtils.appendIfMissing( outputDir, "/", "/" ) +
-                             BUY_FOLDER + currentClosed15MinuteCandle.getTimestamp() + "_" + currentClosed15MinuteCandle.getTicker() + ".png" );
+                             BUY_FOLDER + currentClosed15MinuteCandle.getTicker() + "_" + currentClosed15MinuteCandle.getTimestamp() + ".png" );
 
                     return;
                 }
@@ -174,9 +240,7 @@ public class ImageGeneratorService
         //TODO: Log info about buy and sell choice
         toImage( container,
                  StringUtils.appendIfMissing( outputDir, "/", "/" ) +
-                 DO_NOTHING_FOLDER + currentClosed15MinuteCandle.getTimestamp() + "_" + currentClosed15MinuteCandle.getTicker() + ".png" );
-
-        return;
+                 DO_NOTHING_FOLDER + currentClosed15MinuteCandle.getTicker() + "_" + currentClosed15MinuteCandle.getTimestamp() + ".png" );
     }
 
 
@@ -184,7 +248,7 @@ public class ImageGeneratorService
                           final String savePath )
     {
         final Dimension size = imageContentPane.getSize();
-        final BufferedImage image = new BufferedImage( size.width, size.height, BufferedImage.TYPE_INT_RGB );
+        final BufferedImage image = new BufferedImage( size.width, size.height - 20, BufferedImage.TYPE_INT_RGB );
         final Graphics2D g2 = image.createGraphics();
         imageContentPane.paint( g2 );
         try
@@ -201,26 +265,52 @@ public class ImageGeneratorService
     /**
      * Duplicate the pervious candle in the next candle spot to keep continuity.
      */
-    private void fillInMissingCandles( final LinkedHashMap<LocalDateTime, StockCandleEntity> oneMinuteCandles )
+    private void fillInMissingOneMinuteCandles( final LinkedHashMap<LocalDateTime, StockCandleEntity> oneMinuteCandles )
     {
         final List<StockCandleEntity> candles = new ArrayList<>( oneMinuteCandles.values() );
-        candles.forEach( candle -> {
-            final Optional<StockCandleEntity> nextCandle = Optional.ofNullable( oneMinuteCandles.get( candle.getTimestamp().plusMinutes( 1 ) ) );
-            if ( candle.getTimestamp().toLocalTime().isBefore( MARKET_CLOSE ) &&
-                 nextCandle.isEmpty() )
-            {
-                oneMinuteCandles.put( candle.getTimestamp().plusMinutes( 1 ), StockCandleEntity.builder()
-                                                                                               .timestamp( candle.getTimestamp().plusMinutes( 1 ) )
-                                                                                               .interval( candle.getInterval() )
-                                                                                               .ticker( candle.getTicker() )
-                                                                                               .vwap( candle.getVwap() )
-                                                                                               .low( candle.getLow() )
-                                                                                               .high( candle.getHigh() )
-                                                                                               .close( candle.getClose() )
-                                                                                               .open( candle.getOpen() )
-                                                                                               .volume( candle.getVolume() ).build() );
-            }
-        } );
+        final Long windowLengthInMinutes = Duration.between( candles.get( candles.size() - 1 ).getTimestamp(), candles.get( 0 ).getTimestamp() ).toMinutes();
+        final StockCandleEntity originCandle = candles.get( 0 );
+        IntStream.range( 0, windowLengthInMinutes.intValue() )
+                 .forEach( i -> {
+                     final LocalDateTime timestamp = originCandle.getTimestamp().minusMinutes( i );
+                     if ( timestamp.toLocalTime().isAfter( MARKET_OPEN ) )
+                     {
+                         final Optional<StockCandleEntity> previousCandle = Optional.ofNullable( oneMinuteCandles.get( candles.get( 0 ).getTimestamp().minusMinutes( i ) ) );
+                         if ( previousCandle.isEmpty() )
+                         {
+                             final StockCandleEntity mockCandle = oneMinuteCandles.get( timestamp.plusMinutes( 1 ) );
+                             oneMinuteCandles.put( timestamp, StockCandleEntity.builder()
+                                                                               .timestamp( timestamp )
+                                                                               .interval( mockCandle.getInterval() )
+                                                                               .ticker( mockCandle.getTicker() )
+                                                                               .vwap( mockCandle.getVwap() )
+                                                                               .low( mockCandle.getLow() )
+                                                                               .high( mockCandle.getHigh() )
+                                                                               .close( mockCandle.getClose() )
+                                                                               .open( mockCandle.getOpen() )
+                                                                               .volume( mockCandle.getVolume() ).build() );
+                         }
+                     }
+                 } );
+    }
+
+
+    private void cleanDirectory()
+          throws IOException
+    {
+        FileUtils.deleteDirectory( new File( outputDir ) );
+        Stream.of( BUY_FOLDER, SELL_FOLDER, DO_NOTHING_FOLDER )
+              .forEach( subFolder -> {
+                  try
+                  {
+                      final Path subDir = Paths.get( StringUtils.appendIfMissing( outputDir, "/", "/" ) + subFolder );
+                      Files.createDirectories( subDir );
+                  }
+                  catch ( IOException e )
+                  {
+                      log.error( "Error making sub fodlers", e );
+                  }
+              } );
     }
 
 
