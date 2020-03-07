@@ -60,7 +60,7 @@ public class Application
             }
             catch ( final Exception ex )
             {
-                log.error( "There was an issue while running the NMFTA update task.", ex );
+                log.error( "There was an exception while generating images.", ex );
             }
         } );
 

@@ -2,10 +2,10 @@ package org.bde.chart.generator.service.component;
 
 import lombok.Getter;
 import org.bde.chart.generator.entity.StockCandleEntity;
-import org.bde.chart.generator.model.Candle;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.axis.ValueAxis;
 import org.jfree.chart.plot.CombinedDomainXYPlot;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
@@ -57,10 +57,12 @@ public class CandlestickChart
         priceAxis.setAutoRangeIncludesZero( false );
         priceAxis.setTickMarksVisible( false );
         priceAxis.setTickLabelsVisible( false );
+
         final CandlestickRenderer candlestickRenderer = new CandlestickRenderer( CandlestickRenderer.WIDTHMETHOD_AVERAGE );
 
         // Create candlestickSubplot
         final XYPlot candlestickSubplot = new XYPlot( candlestickDataset, null, priceAxis, candlestickRenderer );
+
         candlestickSubplot.setBackgroundPaint( Color.WHITE );
         candlestickSubplot.setRangeGridlinesVisible( false );
         candlestickSubplot.setDomainGridlinesVisible( false );
@@ -84,7 +86,11 @@ public class CandlestickChart
         XYBarRenderer timeRenderer = new XYBarRenderer();
         timeRenderer.setShadowVisible( false );
         // Create volumeSubplot
-        final XYPlot volumeSubplot = new XYPlot( volumeDataset, null, volumeAxis, timeRenderer );
+
+        final ValueAxis axis = new NumberAxis();
+        axis.setVisible( false );
+        final XYPlot volumeSubplot = new XYPlot( volumeDataset, axis, volumeAxis, timeRenderer );
+
         volumeSubplot.setBackgroundPaint( Color.WHITE );
         volumeSubplot.setDomainGridlinesVisible( false );
         volumeSubplot.setRangeGridlinesVisible( false );
@@ -94,9 +100,8 @@ public class CandlestickChart
          */
         // Create mainPlot
         final CombinedDomainXYPlot mainPlot = new CombinedDomainXYPlot();
-        mainPlot.setGap( 10.0 );
-        mainPlot.add( candlestickSubplot, 3 );
-        mainPlot.add( volumeSubplot, 2 );
+//        mainPlot.setGap( 10.0 );
+        mainPlot.add( candlestickSubplot );
         mainPlot.setOrientation( PlotOrientation.VERTICAL );
 
         JFreeChart chart = new JFreeChart( mainPlot );
