@@ -24,4 +24,15 @@ public interface StockCandleRepository
     List<StockCandleEntity> findByTimestampAndTicker( @Param( "date" ) final LocalDate date,
                                                       @Param( "ticker" ) final String ticker,
                                                       @Param( "interval" ) final Integer interval );
+
+
+    @Query( "SELECT sc " +
+            "FROM stock_candle sc " +
+            "WHERE sc.timestamp = ( SELECT MIN( sc1.timestamp ) " +
+            "                       FROM stock_candle sc1 " +
+            "                       WHERE sc1.interval = :interval " +
+            "                       AND sc1.ticker = :ticker ) " +
+            "AND sc.ticker = :ticker" )
+    StockCandleEntity findEarliestByTickerAndInterval( @Param( "ticker" ) final String ticker,
+                                                       @Param( "interval" ) final Integer interval );
 }

@@ -2,7 +2,6 @@ package org.bde.chart.generator.util;
 
 import org.apache.commons.lang3.RandomUtils;
 import org.bde.chart.generator.entity.StockCandleEntity;
-import org.bde.chart.generator.model.Candle;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -37,7 +36,7 @@ public class CandleConverterUtilTest
                                                          .timestamp( MARKET_CLOSE.minusMinutes( i ) ).build() )
                        .collect( toMap( StockCandleEntity::getTimestamp, e -> e ) );
 
-        final Map<LocalDateTime, Candle> convertedCandles = CandleConverterUtil.convertCandles( candles, 5 );
+        final Map<LocalDateTime, StockCandleEntity> convertedCandles = CandleConverterUtil.convertCandlesAndOrder( candles, 5 );
 
         Assert.assertEquals( 78, convertedCandles.size() );
     }
@@ -62,7 +61,7 @@ public class CandleConverterUtilTest
                                                          .timestamp( MARKET_CLOSE.minusMinutes( i ) ).build() )
                        .collect( toMap( StockCandleEntity::getTimestamp, e -> e ) );
 
-        final Map<LocalDateTime, Candle> convertedCandles = CandleConverterUtil.convertCandles( candles, 5 );
+        final Map<LocalDateTime, StockCandleEntity> convertedCandles = CandleConverterUtil.convertCandlesAndOrder( candles, 5 );
 
         Assert.assertEquals( 1, convertedCandles.size() );
         Assert.assertEquals( 99.0, convertedCandles.entrySet().stream().findFirst().get().getValue().getOpen(), 0.0 );

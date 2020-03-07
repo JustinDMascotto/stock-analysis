@@ -1,6 +1,7 @@
 package org.bde.chart.generator.service.component;
 
 import lombok.Getter;
+import org.bde.chart.generator.entity.StockCandleEntity;
 import org.bde.chart.generator.model.Candle;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -37,7 +38,7 @@ public class CandlestickChart
     {
         final JFreeChart candlestickChart = createChart();
         chartPanel = new ChartPanel( candlestickChart );
-        chartPanel.setPreferredSize( new Dimension( 200, 200 ) );
+        chartPanel.setPreferredSize( new Dimension( 200, 250 ) );
         add( chartPanel, BorderLayout.CENTER );
     }
 
@@ -107,10 +108,11 @@ public class CandlestickChart
     /**
      * Fill series with data.
      */
-    public void addCandle( final Candle candle )
+    public void addCandle( final StockCandleEntity candle,
+                           final Long index )
     {
         // Add bar to the data. Let's repeat the same bar
-        final FixedMillisecond t = new FixedMillisecond( candle.getTimestamp() );
+        final FixedMillisecond t = new FixedMillisecond( index );
         ohlcSeries.add( t, candle.getOpen(), candle.getHigh(), candle.getLow(), candle.getClose() );
         volumeSeries.add( t, candle.getVolume() );
     }

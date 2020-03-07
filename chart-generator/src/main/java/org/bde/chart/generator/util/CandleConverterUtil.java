@@ -2,12 +2,13 @@ package org.bde.chart.generator.util;
 
 import lombok.extern.slf4j.Slf4j;
 import org.bde.chart.generator.entity.StockCandleEntity;
-import org.bde.chart.generator.model.Candle;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -22,8 +23,15 @@ public class CandleConverterUtil
     private static final LocalTime MARKET_OPEN = LocalTime.of( 9, 30, 0 );
 
 
-    public static Map<LocalDateTime, Candle> convertCandles( final Map<LocalDateTime, StockCandleEntity> candleEntities,
-                                                             final Integer outputInterval )
+    public static List<StockCandleEntity> convertCandlesAndOrder( final List<StockCandleEntity> candles,
+                                                                  final Integer outputInterval )
+    {
+        return new ArrayList<>( convertCandlesAndOrder( candles.stream().collect( toMap( StockCandleEntity::getTimestamp, e -> e ) ), outputInterval ).values() );
+    }
+
+
+    public static LinkedHashMap<LocalDateTime, StockCandleEntity> convertCandlesAndOrder( final Map<LocalDateTime, StockCandleEntity> candleEntities,
+                                                                                          final Integer outputInterval )
     {
         final Integer inputInterval =
               candleEntities.entrySet()
@@ -46,13 +54,13 @@ public class CandleConverterUtil
                              .filter( e -> e.getKey().getMinute() % outputInterval == 0 )
                              .map( e -> buildNewCandle( e.getValue(), outputInterval, candleEntities ) )
                              .filter( Objects::nonNull )
-                             .collect( toMap( e -> (LocalDateTime) e.getKey(), e -> (Candle) e.getValue(), ( e1, e2 ) -> e1, LinkedHashMap::new ) );
+                             .collect( toMap( e -> (LocalDateTime) e.getKey(), e -> (StockCandleEntity) e.getValue(), ( e1, e2 ) -> e1, LinkedHashMap::new ) );
     }
 
 
-    private static Map.Entry<LocalDateTime, Candle> buildNewCandle( final StockCandleEntity candle,
-                                                                    final Integer outputInterval,
-                                                                    final Map<LocalDateTime, StockCandleEntity> candleEntityMap )
+    private static Map.Entry<LocalDateTime, StockCandleEntity> buildNewCandle( final StockCandleEntity candle,
+                                                                               final Integer outputInterval,
+                                                                               final Map<LocalDateTime, StockCandleEntity> candleEntityMap )
     {
         if ( candle.getTimestamp().toLocalTime().isAfter( MARKET_OPEN ) )
         {
@@ -63,12 +71,14 @@ public class CandleConverterUtil
             final double tmpClose = candle.getClose();
             final int[] tmpVolume = { candle.getVolume() };
             final double[] vwap = { candle.getVwap() };
-            boolean[] brokenSegment = { false };
+            final int[] divisor = { 0 };
             IntStream.range( 1, numCandlesToMerge )
                      .forEach( i -> {
-                         final Optional<StockCandleEntity> possibleMergeCandle = Optional.ofNullable( candleEntityMap.get( candle.getTimestamp().minusMinutes( candle.getInterval() * i ) ) );
-                         if ( !brokenSegment[0] && possibleMergeCandle.isPresent() )
+                         final LocalDateTime candleTimestamp = candle.getTimestamp().minusMinutes( candle.getInterval() * i );
+                         final Optional<StockCandleEntity> possibleMergeCandle = Optional.ofNullable( candleEntityMap.get( candleTimestamp ) );
+                         if ( possibleMergeCandle.isPresent() )
                          {
+                             divisor[0]++;
                              final var mergeCandle = possibleMergeCandle.get();
                              tmpHigh[0] = tmpHigh[0] > mergeCandle.getHigh() ? tmpHigh[0] : mergeCandle.getHigh();
                              tmpLow[0] = tmpLow[0] < mergeCandle.getLow() ? tmpLow[0] : mergeCandle.getLow();
@@ -81,31 +91,27 @@ public class CandleConverterUtil
                          }
                          else
                          {
-                             brokenSegment[0] = true;
+                             log.warn( "No candle with timestamp." );
                          }
                      } );
 
-            if ( brokenSegment[0] )
-            {
-                log.warn( "Could not build candle, broken segment in map of input candles." );
-                return null;
-            }
-
-            return Map.entry( candle.getTimestamp(), Candle.builder()
-                                                           .volume( tmpVolume[0] )
-                                                           .vwap( vwap[0] / numCandlesToMerge )
-                                                           .close( tmpClose )
-                                                           .open( tmpOpen[0] )
-                                                           .high( tmpHigh[0] )
-                                                           .interval( outputInterval )
-                                                           .low( tmpLow[0] ).build() );
+            return Map.entry( candle.getTimestamp(), StockCandleEntity.builder()
+                                                                      .volume( tmpVolume[0] )
+                                                                      .vwap( vwap[0] / divisor[0] )
+                                                                      .close( tmpClose )
+                                                                      .open( tmpOpen[0] )
+                                                                      .high( tmpHigh[0] )
+                                                                      .interval( outputInterval )
+                                                                      .low( tmpLow[0] )
+                                                                      .timestamp( candle.getTimestamp() )
+                                                                      .ticker( candle.getTicker() ).build() );
         }
 
         return null;
     }
 
 
-    private static Comparator<Map.Entry<LocalDateTime,StockCandleEntity>> compareLocalDateTimes = ( t2, t1 ) -> {
+    private static Comparator<Map.Entry<LocalDateTime, StockCandleEntity>> compareLocalDateTimes = ( t2, t1 ) -> {
         if ( t2 == t1 )
         {
             return 0;

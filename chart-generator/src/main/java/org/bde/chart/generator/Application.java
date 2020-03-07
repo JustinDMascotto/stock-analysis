@@ -52,11 +52,11 @@ public class Application
         tickers.forEach( ticker -> {
             try
             {
-                apiRateLimiter.call( () -> {
-                    dataRetriever.maybeRetrieveData( ticker, 1 );
-                    return null;
-                } );
-                //            imageGeneratorService.generateGraphs( ticker );
+//                apiRateLimiter.call( () -> {
+//                    dataRetriever.maybeRetrieveData( ticker, 1 );
+//                    return null;
+//                } );
+                imageGeneratorService.generateGraphs( ticker );
             }
             catch ( final Exception ex )
             {
