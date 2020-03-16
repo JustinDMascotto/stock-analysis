@@ -63,52 +63,49 @@ public class CandleConverterUtil
                                                                                final Integer outputInterval,
                                                                                final Map<LocalDateTime, StockCandleEntity> candleEntityMap )
     {
-        if ( candle.getTimestamp().toLocalTime().isAfter( MARKET_OPEN ) )
-        {
-            int numCandlesToMerge = outputInterval / candle.getInterval();
-            final double[] tmpHigh = { candle.getHigh() };
-            final double[] tmpLow = { candle.getLow() };
-            final double[] tmpOpen = { 0 };
-            final double tmpClose = candle.getClose();
-            final int[] tmpVolume = { candle.getVolume() };
-            final double[] vwap = { candle.getVwap() };
-            final int[] divisor = { 1 };
-            IntStream.range( 1, numCandlesToMerge )
-                     .forEach( i -> {
-                         final LocalDateTime candleTimestamp = candle.getTimestamp().minusMinutes( candle.getInterval() * i );
-                         final Optional<StockCandleEntity> possibleMergeCandle = Optional.ofNullable( candleEntityMap.get( candleTimestamp ) );
-                         if ( possibleMergeCandle.isPresent() )
+        int numCandlesToMerge = outputInterval / candle.getInterval();
+        final double[] tmpHigh = { candle.getHigh() };
+        final double[] tmpLow = { candle.getLow() };
+        final double[] tmpOpen = { 0 };
+        final double tmpClose = candle.getClose();
+        final int[] tmpVolume = { candle.getVolume() };
+        final double[] vwap = { candle.getVwap() };
+        final int[] divisor = { 1 };
+        IntStream.range( 1, numCandlesToMerge )
+                 .forEach( i -> {
+                     final LocalDateTime candleTimestamp = candle.getTimestamp().minusMinutes( candle.getInterval() * i );
+                     final Optional<StockCandleEntity> possibleMergeCandle = Optional.ofNullable( candleEntityMap.get( candleTimestamp ) );
+                     if ( possibleMergeCandle.isPresent() )
+                     {
+                         divisor[0]++;
+                         final var mergeCandle = possibleMergeCandle.get();
+                         tmpHigh[0] = tmpHigh[0] > mergeCandle.getHigh() ? tmpHigh[0] : mergeCandle.getHigh();
+                         tmpLow[0] = tmpLow[0] < mergeCandle.getLow() ? tmpLow[0] : mergeCandle.getLow();
+                         vwap[0] = vwap[0] + ObjectUtils.defaultIfNull( mergeCandle.getVwap(), vwap[0] );
+                         tmpVolume[0] = tmpVolume[0] + mergeCandle.getVolume();
+                         if ( numCandlesToMerge - 1 == i )
                          {
-                             divisor[0]++;
-                             final var mergeCandle = possibleMergeCandle.get();
-                             tmpHigh[0] = tmpHigh[0] > mergeCandle.getHigh() ? tmpHigh[0] : mergeCandle.getHigh();
-                             tmpLow[0] = tmpLow[0] < mergeCandle.getLow() ? tmpLow[0] : mergeCandle.getLow();
-                             vwap[0] = vwap[0] + ObjectUtils.defaultIfNull( mergeCandle.getVwap(), vwap[0] );
-                             tmpVolume[0] = tmpVolume[0] + mergeCandle.getVolume();
-                             if ( numCandlesToMerge - 1 == i )
-                             {
-                                 tmpOpen[0] = mergeCandle.getOpen();
-                             }
+                             tmpOpen[0] = mergeCandle.getOpen();
                          }
-                         else
-                         {
-                             log.warn( "No candle with timestamp." );
-                         }
-                     } );
+                     }
+                     else
+                     {
+                         log.warn( "No candle with timestamp." );
+                     }
+                 } );
 
-            return Map.entry( candle.getTimestamp(), StockCandleEntity.builder()
-                                                                      .volume( tmpVolume[0] )
-                                                                      .vwap( vwap[0] / divisor[0] )
-                                                                      .close( tmpClose )
-                                                                      .open( tmpOpen[0] )
-                                                                      .high( tmpHigh[0] )
-                                                                      .interval( outputInterval )
-                                                                      .low( tmpLow[0] )
-                                                                      .timestamp( candle.getTimestamp() )
-                                                                      .ticker( candle.getTicker() ).build() );
-        }
+        return Map.entry( candle.getTimestamp(), StockCandleEntity.builder()
+                                                                  .volume( tmpVolume[0] )
+                                                                  .vwap( vwap[0] / divisor[0] )
+                                                                  .close( tmpClose )
+                                                                  .open( tmpOpen[0] )
+                                                                  .high( tmpHigh[0] )
+                                                                  .interval( outputInterval )
+                                                                  .low( tmpLow[0] )
+                                                                  .timestamp( candle.getTimestamp() )
+                                                                  .ticker( candle.getTicker() ).build() );
 
-        return null;
+
     }
 
 

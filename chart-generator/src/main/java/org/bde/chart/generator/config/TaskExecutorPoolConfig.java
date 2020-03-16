@@ -15,9 +15,9 @@ public class TaskExecutorPoolConfig
     TaskExecutor chartImageGeneratorExecutor()
     {
         final ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setQueueCapacity( 1000 );
-        executor.setCorePoolSize( 50 );
-        executor.setMaxPoolSize( 50 );
+        executor.setQueueCapacity( 200 );
+        executor.setCorePoolSize( 25 );
+        executor.setMaxPoolSize( 25 );
         executor.setRejectedExecutionHandler( new ThreadPoolExecutor.CallerRunsPolicy() );
         executor.setThreadNamePrefix( "stock_chart_gen-" );
         executor.initialize();

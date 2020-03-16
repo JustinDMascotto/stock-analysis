@@ -23,7 +23,7 @@ databaseChangeLog:
                   type: DOUBLE
               - column:
                   name: low
-                  type: BIGINT
+                  type: DOUBLE
               - column:
                   name: close
                   type: DOUBLE
@@ -32,7 +32,7 @@ databaseChangeLog:
                   type: DOUBLE
               - column:
                   name: volume
-                  type: INTEGER
+                  type: DOUBLE
               - column:
                   name: timestamp
                   type: TIMESTAMP

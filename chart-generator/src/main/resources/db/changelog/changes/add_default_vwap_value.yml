@@ -1,0 +1,10 @@
+databaseChangeLog:
+  - changeSet:
+      id: add_default_vwap_value-1
+      author: jmascotto
+      changes:
+        - addDefaultValue:
+            columnDataType: DOUBLE
+            columnName: vwap
+            tableName: stock_candle
+            defaultValueNumeric: '0.0'

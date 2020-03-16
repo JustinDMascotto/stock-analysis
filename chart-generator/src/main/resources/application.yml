@@ -9,7 +9,7 @@ spring:
 
 bde:
   stock-analysis:
-    list-of-stocks: SQ,JD,MCD,NFLX,DIS,MRVL,LYFT,UBER,CCL,WMT,AAPL,AMD,MSFT,NVDA,TSLA,BAC,ROKU,INTC,UAL
+    list-of-stocks: BTC
     image-generator:
       output-dir: /home/justin/Desktop/StockImages/
     datasource:

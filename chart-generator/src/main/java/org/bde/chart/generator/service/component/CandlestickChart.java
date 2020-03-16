@@ -102,6 +102,8 @@ public class CandlestickChart
         final CombinedDomainXYPlot mainPlot = new CombinedDomainXYPlot();
 //        mainPlot.setGap( 10.0 );
         mainPlot.add( candlestickSubplot );
+//        mainPlot.add( candlestickSubplot, 3 );
+//        mainPlot.add( volumeSubplot, 2 );
         mainPlot.setOrientation( PlotOrientation.VERTICAL );
 
         JFreeChart chart = new JFreeChart( mainPlot );
