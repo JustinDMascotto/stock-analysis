@@ -28,6 +28,28 @@ public interface StockCandleRepository
 
     @Query( "SELECT sc " +
             "FROM stock_candle sc " +
+            "WHERE sc.timestamp >= :beginDateInclusive " +
+            "AND sc.timestamp < :endDateExclusive " +
+            "AND sc.ticker.name = :tickerName " +
+            "AND sc.interval = :interval " +
+            "ORDER BY sc.timestamp DESC" )
+    List<StockCandleEntity> findByTickerAndIntervalBetweenDateTimes( @Param( "beginDateInclusive" ) final LocalDateTime beginDateTimeInclusive,
+                                                                     @Param( "endDateExclusive" ) final LocalDateTime endDateExclusive,
+                                                                     @Param( "tickerName" ) final String tickerName,
+                                                                     @Param( "interval" ) final Integer interval );
+
+    @Query( "SELECT sc " +
+            "FROM stock_candle sc " +
+            "WHERE sc.timestamp = :timestamp " +
+            "AND sc.ticker.name = :tickerName " +
+            "AND sc.interval = :interval " +
+            "ORDER BY sc.timestamp DESC" )
+    StockCandleEntity findByTickerIntervalAndDateTime( @Param( "timestamp" ) final LocalDateTime timestamp,
+                                                       @Param( "tickerName" ) final String tickerName,
+                                                       @Param( "interval" ) final Integer interval );
+
+    @Query( "SELECT sc " +
+            "FROM stock_candle sc " +
             "WHERE sc.timestamp = ( SELECT MIN( sc1.timestamp ) " +
             "                       FROM stock_candle sc1 " +
             "                       WHERE sc1.interval = :interval " +
@@ -46,12 +68,22 @@ public interface StockCandleRepository
                                    @Param( "tickerName" ) final String tickerName );
 
     @Query( value = "SELECT stddev(sc.volume) " +
-            "FROM stock_candle sc " +
-            "JOIN ticker t ON sc.ticker_id = :tickerId " +
-            "WHERE sc.timestamp >= :beginDateInclusive " +
-            "AND sc.timestamp < :endDateExclusive",
-            nativeQuery = true)
+                    "FROM stock_candle sc " +
+                    "JOIN ticker t ON sc.ticker_id = :tickerId " +
+                    "WHERE sc.timestamp >= :beginDateInclusive " +
+                    "AND sc.timestamp < :endDateExclusive",
+            nativeQuery = true )
     Double stdDevBetweenDates( @Param( "beginDateInclusive" ) final LocalDateTime beginDateInclusive,
                                @Param( "endDateExclusive" ) final LocalDateTime endDateExclusive,
                                @Param( "tickerId" ) final Long tickerId );
+
+    @Query( value = "SELECT regr_slope(sc.volume,sc.id) " +
+                    "FROM stock_candle sc " +
+                    "WHERE sc.ticker_id = :tickerId " +
+                    "AND sc.timestamp >= :beginDateInclusive " +
+                    "AND sc.timestamp < :endDateExclusive",
+            nativeQuery = true )
+    Double slope( @Param( "beginDateInclusive" ) final LocalDateTime beginDateInclusive,
+                  @Param( "endDateExclusive" ) final LocalDateTime endDateExclusive,
+                  @Param( "tickerId" ) final Long tickerId );
 }

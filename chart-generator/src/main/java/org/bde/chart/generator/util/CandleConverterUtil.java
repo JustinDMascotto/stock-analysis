@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ObjectUtils;
 import org.bde.chart.generator.entity.StockCandleEntity;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
@@ -59,6 +60,39 @@ public class CandleConverterUtil
     }
 
 
+    /**
+     * Duplicate the pervious candle in the next candle spot to keep continuity.
+     */
+    public static void fillInMissingCandles( final LinkedHashMap<LocalDateTime, StockCandleEntity> candles,
+                                             final Integer interval )
+    {
+        final List<StockCandleEntity> candlesList = new ArrayList<>( candles.values() );
+        final Long windowLengthInMinutes = Duration.between( candlesList.get( candlesList.size() - 1 ).getTimestamp(), candlesList.get( 0 ).getTimestamp() ).toMinutes();
+        final Long candlesInWindow = windowLengthInMinutes / interval;
+        final StockCandleEntity originCandle = candlesList.get( 0 );
+        IntStream.range( 0, candlesInWindow.intValue() )
+                 .forEach( i -> {
+                     final LocalDateTime previousCandlesTimestamp = originCandle.getTimestamp().minusMinutes( i * interval );
+
+                     final Optional<StockCandleEntity> previousCandle = Optional.ofNullable( candles.get( previousCandlesTimestamp ) );
+                     if ( previousCandle.isEmpty() )
+                     {
+                         final StockCandleEntity mockCandle = candles.get( previousCandlesTimestamp.plusMinutes( 1 ) );
+                         candles.put( previousCandlesTimestamp, StockCandleEntity.builder()
+                                                                                 .timestamp( previousCandlesTimestamp )
+                                                                                 .interval( mockCandle.getInterval() )
+                                                                                 .ticker( mockCandle.getTicker() )
+                                                                                 .vwap( mockCandle.getVwap() )
+                                                                                 .low( mockCandle.getLow() )
+                                                                                 .high( mockCandle.getHigh() )
+                                                                                 .close( mockCandle.getClose() )
+                                                                                 .open( mockCandle.getOpen() )
+                                                                                 .volume( mockCandle.getVolume() ).build() );
+                     }
+                 } );
+    }
+
+
     private static Map.Entry<LocalDateTime, StockCandleEntity> buildNewCandle( final StockCandleEntity candle,
                                                                                final Integer outputInterval,
                                                                                final Map<LocalDateTime, StockCandleEntity> candleEntityMap )
@@ -104,8 +138,6 @@ public class CandleConverterUtil
                                                                   .low( tmpLow[0] )
                                                                   .timestamp( candle.getTimestamp() )
                                                                   .ticker( candle.getTicker() ).build() );
-
-
     }
 
 
