@@ -5,3 +5,5 @@ databaseChangeLog:
       file: db/changelog/changes/create_indices.yml
   - include:
       file: db/changelog/changes/add_default_vwap_value.yml
+  - include:
+      file: db/changelog/changes/add_ticker_table.yaml

@@ -18,11 +18,11 @@ public interface StockCandleRepository
     @Query( "SELECT sc " +
             "FROM stock_candle sc " +
             "WHERE DATE(sc.timestamp) = DATE(:date) " +
-            "AND sc.ticker = :ticker " +
+            "AND sc.ticker.name = :tickerName " +
             "AND sc.interval = :interval " +
             "ORDER BY sc.timestamp DESC" )
     List<StockCandleEntity> findByTimestampAndTicker( @Param( "date" ) final LocalDate date,
-                                                      @Param( "ticker" ) final String ticker,
+                                                      @Param( "tickerName" ) final String tickerName,
                                                       @Param( "interval" ) final Integer interval );
 
 
@@ -31,8 +31,8 @@ public interface StockCandleRepository
             "WHERE sc.timestamp = ( SELECT MIN( sc1.timestamp ) " +
             "                       FROM stock_candle sc1 " +
             "                       WHERE sc1.interval = :interval " +
-            "                       AND sc1.ticker = :ticker ) " +
-            "AND sc.ticker = :ticker" )
-    StockCandleEntity findEarliestByTickerAndInterval( @Param( "ticker" ) final String ticker,
+            "                       AND sc1.ticker.name = :tickerName ) " +
+            "AND sc.ticker.name = :tickerName" )
+    StockCandleEntity findEarliestByTickerAndInterval( @Param( "tickerName" ) final String tickerName,
                                                        @Param( "interval" ) final Integer interval );
 }

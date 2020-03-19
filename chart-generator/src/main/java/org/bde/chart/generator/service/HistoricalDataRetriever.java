@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.bde.chart.generator.entity.StockCandleEntity;
+import org.bde.chart.generator.repository.TickerRepository;
 import org.bde.chart.generator.util.IAppLocalRateLimiter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,18 +61,22 @@ public class HistoricalDataRetriever
 
     private final StockCandleRepository repo;
 
+    private final TickerRepository tickerRepository;
+
 
     @Value( "${bde.stock-analysis.list-of-stocks}" )
     private List<String> tickers;
 
 
-    public HistoricalDataRetriever( final StockCandleRepository repo )
+    public HistoricalDataRetriever( final StockCandleRepository repo,
+                                    final TickerRepository tickerRepository )
     {
         List<HttpMessageConverter<?>> messageConverters = new ArrayList<HttpMessageConverter<?>>();
         messageConverters.add( new ByteArrayHttpMessageConverter() );
         messageConverters.add( new StringHttpMessageConverter() );
         restTemplate = new RestTemplate( messageConverters );
         this.repo = repo;
+        this.tickerRepository = tickerRepository;
     }
 
 
@@ -171,6 +176,7 @@ public class HistoricalDataRetriever
                                                                      final String ticker )
           throws Exception
     {
+        final var tickerEntity = tickerRepository.findByName( ticker );
         final var node = MAPPER.readTree( jsonBody );
         final var timeSeries = node.get( String.format( "Time Series (%smin)", interval ) );
         return IntStream.range( 0, 20000 )
@@ -179,7 +185,7 @@ public class HistoricalDataRetriever
                             return Optional.ofNullable( timeSeries.get( candleTime.format( OHLC_DATE_TIME_FORMATTER ) ) )
                                            .map( candle -> StockCandleEntity.builder()
                                                                             .timestamp( candleTime )
-                                                                            .ticker( ticker )
+                                                                            .ticker( tickerEntity )
                                                                             .interval( interval )
                                                                             .open( candle.get( "1. open" ).asDouble() )
                                                                             .high( candle.get( "2. high" ).asDouble() )

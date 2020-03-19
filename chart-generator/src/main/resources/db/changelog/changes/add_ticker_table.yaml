@@ -1,0 +1,34 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: create_ticker_table
+      author: jmascotto
+      changes:
+        - createTable:
+            tableName: ticker
+            columns:
+              - column:
+                  name: id
+                  type: BIGINT
+                  constraints:
+                    primaryKey: true
+              - column:
+                  name: name
+                  type: TEXT
+              - column:
+                  name: market_open
+                  type: TEXT
+              - column:
+                  name: market_open_time
+                  type: TIMESTAMP
+              - column:
+                  name: market_close_time
+                  type: TIMESTAMP
+
+  - changeSet:
+      id: create_stock_candle_seq
+      author: jmascotto
+      changes:
+        - createSequence:
+            sequenceName: ticker_seq
+            startValue: 1000

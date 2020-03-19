@@ -8,9 +8,12 @@ import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters;
 
 import javax.persistence.Convert;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.SequenceGenerator;
 import java.time.LocalDateTime;
 
@@ -30,7 +33,9 @@ public class StockCandleEntity
                      strategy = GenerationType.SEQUENCE )
     private Long id;
 
-    private String ticker;
+    @ManyToOne( fetch = FetchType.EAGER )
+    @JoinColumn( name = "ticker_id" )
+    private TickerEntity ticker;
 
     private Double open;
 

@@ -1,7 +1,14 @@
 databaseChangeLog:
   - changeSet:
-      id: add-index-date-ticket
+      id: add-index-date-ticket-interval
       author: jmascotto
       changes:
         - sql:
-            sql: "CREATE INDEX date_ticker_idx ON stock_candle ( DATE( timestamp ), ticker, interval );"
+            sql: "CREATE INDEX date_ticker_idx ON stock_candle ( DATE( timestamp ), ticker_id, interval );"
+
+  - changeSet:
+      id: add-index-ticker-interval-date-desc
+      author: jmascotto
+      changes:
+        - sql:
+            sql: "CREATE INDEX ticker_interval_timestamp_desc_idx ON stock_candle ( ticker_id, interval, timestamp DESC );"
