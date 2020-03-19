@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -25,7 +26,6 @@ public interface StockCandleRepository
                                                       @Param( "tickerName" ) final String tickerName,
                                                       @Param( "interval" ) final Integer interval );
 
-
     @Query( "SELECT sc " +
             "FROM stock_candle sc " +
             "WHERE sc.timestamp = ( SELECT MIN( sc1.timestamp ) " +
@@ -35,4 +35,23 @@ public interface StockCandleRepository
             "AND sc.ticker.name = :tickerName" )
     StockCandleEntity findEarliestByTickerAndInterval( @Param( "tickerName" ) final String tickerName,
                                                        @Param( "interval" ) final Integer interval );
+
+    @Query( "SELECT avg(sc.volume) " +
+            "FROM stock_candle sc " +
+            "JOIN ticker t ON sc.ticker.name = :tickerName " +
+            "WHERE sc.timestamp >= :beginDateInclusive " +
+            "AND sc.timestamp < :endDateExclusive" )
+    Double meanVolumeBetweenDates( @Param( "beginDateInclusive" ) final LocalDateTime beginDateInclusive,
+                                   @Param( "endDateExclusive" ) final LocalDateTime endDateExclusive,
+                                   @Param( "tickerName" ) final String tickerName );
+
+    @Query( value = "SELECT stddev(sc.volume) " +
+            "FROM stock_candle sc " +
+            "JOIN ticker t ON sc.ticker_id = :tickerId " +
+            "WHERE sc.timestamp >= :beginDateInclusive " +
+            "AND sc.timestamp < :endDateExclusive",
+            nativeQuery = true)
+    Double stdDevBetweenDates( @Param( "beginDateInclusive" ) final LocalDateTime beginDateInclusive,
+                               @Param( "endDateExclusive" ) final LocalDateTime endDateExclusive,
+                               @Param( "tickerId" ) final Long tickerId );
 }
