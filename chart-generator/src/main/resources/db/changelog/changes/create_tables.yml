@@ -13,8 +13,8 @@ databaseChangeLog:
                   constraints:
                     primaryKey: true
               - column:
-                  name: ticker
-                  type: TEXT
+                  name: ticker_id
+                  type: BIGINT
               - column:
                   name: open
                   type: DOUBLE
