@@ -6,7 +6,6 @@ import org.bde.chart.generator.entity.StockCandleEntity;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
@@ -22,8 +21,6 @@ import static java.util.stream.Collectors.toMap;
 @Slf4j
 public class CandleConverterUtil
 {
-    private static final LocalTime MARKET_OPEN = LocalTime.of( 9, 30, 0 );
-
 
     public static List<StockCandleEntity> convertCandlesAndOrder( final List<StockCandleEntity> candles,
                                                                   final Integer outputInterval )
@@ -77,7 +74,7 @@ public class CandleConverterUtil
                      final Optional<StockCandleEntity> previousCandle = Optional.ofNullable( candles.get( previousCandlesTimestamp ) );
                      if ( previousCandle.isEmpty() )
                      {
-                         final StockCandleEntity mockCandle = candles.get( previousCandlesTimestamp.plusMinutes( 1 ) );
+                         final StockCandleEntity mockCandle = candles.get( previousCandlesTimestamp.plusMinutes( interval ) );
                          candles.put( previousCandlesTimestamp, StockCandleEntity.builder()
                                                                                  .timestamp( previousCandlesTimestamp )
                                                                                  .interval( mockCandle.getInterval() )
@@ -97,7 +94,7 @@ public class CandleConverterUtil
                                                                                final Integer outputInterval,
                                                                                final Map<LocalDateTime, StockCandleEntity> candleEntityMap )
     {
-        int numCandlesToMerge = outputInterval / candle.getInterval();
+        int numberOfOutputCandles = outputInterval / candle.getInterval();
         final double[] tmpHigh = { candle.getHigh() };
         final double[] tmpLow = { candle.getLow() };
         final double[] tmpOpen = { 0 };
@@ -105,7 +102,7 @@ public class CandleConverterUtil
         final int[] tmpVolume = { candle.getVolume() };
         final double[] vwap = { candle.getVwap() };
         final int[] divisor = { 1 };
-        IntStream.range( 1, numCandlesToMerge )
+        IntStream.range( 1, numberOfOutputCandles )
                  .forEach( i -> {
                      final LocalDateTime candleTimestamp = candle.getTimestamp().minusMinutes( candle.getInterval() * i );
                      final Optional<StockCandleEntity> possibleMergeCandle = Optional.ofNullable( candleEntityMap.get( candleTimestamp ) );
@@ -117,7 +114,7 @@ public class CandleConverterUtil
                          tmpLow[0] = tmpLow[0] < mergeCandle.getLow() ? tmpLow[0] : mergeCandle.getLow();
                          vwap[0] = vwap[0] + ObjectUtils.defaultIfNull( mergeCandle.getVwap(), vwap[0] );
                          tmpVolume[0] = tmpVolume[0] + mergeCandle.getVolume();
-                         if ( numCandlesToMerge - 1 == i )
+                         if ( numberOfOutputCandles - 1 == i )
                          {
                              tmpOpen[0] = mergeCandle.getOpen();
                          }

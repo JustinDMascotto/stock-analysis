@@ -1,5 +1,6 @@
 package org.bde.chart.generator.service.ruleengines;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.bde.chart.generator.entity.MarketOpen;
 import org.bde.chart.generator.entity.StockCandleEntity;
@@ -26,7 +27,7 @@ import java.util.stream.IntStream;
 
 import static java.util.stream.Collectors.toMap;
 
-
+@Slf4j
 public abstract class AbstractBuySellRuleEngine
 {
     private final StockCandleRepository stockCandleRepository;
@@ -48,6 +49,7 @@ public abstract class AbstractBuySellRuleEngine
                               final LocalDateTime endDateTime )
     {
         var syntheticNow = startDateTime;
+        Optional<RuleEngineOutput> buyOrSellOutput = Optional.empty();
         while ( syntheticNow.isBefore( endDateTime ) )
         {
             if ( ticker.getMarketOpen() == MarketOpen.CONTINUOUS )
@@ -81,11 +83,16 @@ public abstract class AbstractBuySellRuleEngine
                                                                                                                 ticker.getName(),
                                                                                                                 inputInterval );
 
-                final RuleEngineOutput buyOrSell = determineBuyOrSell( currentCandle, previousCandle, lookaheadCandle );
+                if ( currentCandle != null &&
+                     previousCandle != null &&
+                     lookaheadCandle != null )
+                {
+                    buyOrSellOutput = Optional.of( determineBuyOrSell( currentCandle, previousCandle, lookaheadCandle ) );
 
-                toImage( container.getContentPane(),
-                         StringUtils.appendIfMissing( outputFolder, "/", "/" ) +
-                         buyOrSell.getSubfolderName() + currentCandle.getTicker().getName() + "_" + currentCandle.getTimestamp() + ".png" );
+                    toImage( container.getContentPane(),
+                             StringUtils.appendIfMissing( outputFolder, "/", "/" ) +
+                             buyOrSellOutput.get().getSubfolderName() + currentCandle.getTicker().getName() + "_" + currentCandle.getTimestamp() + ".png" );
+                }
             }
             else
             {
@@ -99,6 +106,7 @@ public abstract class AbstractBuySellRuleEngine
                 }
             }
 
+            buyOrSellOutput.ifPresent( buyOrSell -> log.info( buyOrSell.name() ) );
             syntheticNow = syntheticNow.plus( getLookAheadDuration() );
         }
     }
