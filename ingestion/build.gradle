@@ -1,0 +1,30 @@
+apply plugin: 'org.springframework.boot'
+apply plugin: 'application'
+apply plugin: 'com.avast.gradle.docker-compose'
+
+mainClassName = 'org.bde.stock.ingestion.Application'
+
+springBoot {
+    buildInfo()
+}
+
+bootRun {
+    systemProperty 'java.awt.headless', 'false'
+    jvmArgs += "-Djava.awt.headless=false"
+}
+
+dependencies {
+
+    api group: 'org.springframework.boot', name: 'spring-boot-starter'
+    api group: 'org.springframework.boot', name: 'spring-boot-starter-web'
+    api group: 'org.springframework.boot', name: 'spring-boot-starter-actuator'
+    api group: 'org.springframework.kafka', name: 'spring-kafka'
+    api group: 'org.apache.kafka', name: 'kafka-streams'
+    api group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
+    api group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
+    api group: 'commons-io', name: 'commons-io', version: '2.6'
+
+    api group: 'com.github.vladimir-bukhtoyarov', name: 'bucket4j-core', version: '4.6.0'
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}
