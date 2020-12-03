@@ -1,4 +1,4 @@
-package org.bde.stock.ingestion.streams.serde;
+package org.bde.stock.ingestion.serde;
 
 import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.SerializationException;
