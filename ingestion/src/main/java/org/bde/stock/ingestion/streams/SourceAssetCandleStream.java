@@ -41,7 +41,7 @@ public class SourceAssetCandleStream
 
     public static final String COMPACTED_TOPIC = "asset-candle.compacted";
 
-    @Bean
+    @Bean( name = "singleMinuteCandles")
     public KStream<AssetCandleMessageKey, AssetCandleMessageValue> kstreamAssetCandle( final StreamsBuilder builder )
     {
         final var keySerde = new JsonSerde<>( AssetCandleMessageKey.class );
@@ -87,38 +87,38 @@ public class SourceAssetCandleStream
     }
 
 
-    @Bean
-    public KStream<AssetCandleCompactedMessageKey, AssetCandleTableMessageValue> kstreamAssetCandleCompacted( final KStream<AssetCandleMessageKey, AssetCandleMessageValue> sourceStream )
-    {
-        final var valueSerde = new JsonSerde<>( AssetCandleTableMessageValue.class );
-        final var compactedKeySerde = new JsonSerde<>( AssetCandleCompactedMessageKey.class );
-
-        // compacted topic stream
-        KStream<AssetCandleCompactedMessageKey, AssetCandleTableMessageValue> compacted = sourceStream.map( keyValueMapper );
-
-        compacted.to( COMPACTED_TOPIC, Produced.with( compactedKeySerde, valueSerde ) );
-
-        return compacted;
-    }
-
-
-    private final KeyValueMapper<AssetCandleMessageKey, AssetCandleMessageValue, KeyValue<? extends AssetCandleCompactedMessageKey, ? extends AssetCandleTableMessageValue>> keyValueMapper =
-          ( key, value ) -> {
-              final var startOfDay = LocalDate.now( ZoneOffset.UTC ).atStartOfDay();
-              final var minutesToday = Duration.between( startOfDay, LocalDateTime.now( ZoneOffset.UTC ) ).toMinutes();
-              return new KeyValue<>( AssetCandleCompactedMessageKey.builder()
-                                                                   .interval( key.getInterval() )
-                                                                   .symbol( key.getSymbol() )
-                                                                   .minuteOfTheDay( (int) minutesToday )
-                                                                   .build(),
-                                     AssetCandleTableMessageValue.builder()
-                                                                 .close( value.getClose() )
-                                                                 .open( value.getOpen() )
-                                                                 .high( value.getHigh() )
-                                                                 .low( value.getLow() )
-                                                                 .volume( value.getVolume() )
-                                                                 .vwap( value.getVwap() )
-                                                                 .interval( key.getInterval() )
-                                                                 .timestamp( key.getTimestamp() ).build() );
-          };
+//    @Bean
+//    public KStream<AssetCandleCompactedMessageKey, AssetCandleTableMessageValue> kstreamAssetCandleCompacted( final KStream<AssetCandleMessageKey, AssetCandleMessageValue> sourceStream )
+//    {
+//        final var valueSerde = new JsonSerde<>( AssetCandleTableMessageValue.class );
+//        final var compactedKeySerde = new JsonSerde<>( AssetCandleCompactedMessageKey.class );
+//
+//        // compacted topic stream
+//        KStream<AssetCandleCompactedMessageKey, AssetCandleTableMessageValue> compacted = sourceStream.map( keyValueMapper );
+//
+//        compacted.to( COMPACTED_TOPIC, Produced.with( compactedKeySerde, valueSerde ) );
+//
+//        return compacted;
+//    }
+//
+//
+//    private final KeyValueMapper<AssetCandleMessageKey, AssetCandleMessageValue, KeyValue<? extends AssetCandleCompactedMessageKey, ? extends AssetCandleTableMessageValue>> keyValueMapper =
+//          ( key, value ) -> {
+//              final var startOfDay = LocalDate.now( ZoneOffset.UTC ).atStartOfDay();
+//              final var minutesToday = Duration.between( startOfDay, LocalDateTime.now( ZoneOffset.UTC ) ).toMinutes();
+//              return new KeyValue<>( AssetCandleCompactedMessageKey.builder()
+//                                                                   .interval( key.getInterval() )
+//                                                                   .symbol( key.getSymbol() )
+//                                                                   .minuteOfTheDay( (int) minutesToday )
+//                                                                   .build(),
+//                                     AssetCandleTableMessageValue.builder()
+//                                                                 .close( value.getClose() )
+//                                                                 .open( value.getOpen() )
+//                                                                 .high( value.getHigh() )
+//                                                                 .low( value.getLow() )
+//                                                                 .volume( value.getVolume() )
+//                                                                 .vwap( value.getVwap() )
+//                                                                 .interval( key.getInterval() )
+//                                                                 .timestamp( value.getTimestamp() ).build() );
+//          };
 }

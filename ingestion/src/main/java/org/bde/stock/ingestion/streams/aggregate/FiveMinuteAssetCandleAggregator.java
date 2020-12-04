@@ -1,25 +1,34 @@
 package org.bde.stock.ingestion.streams.aggregate;
 
 import org.apache.kafka.streams.kstream.KStream;
-import org.bde.stock.ingestion.message.AssetCandleCompactedMessageKey;
-import org.bde.stock.ingestion.message.AssetCandleTableMessageValue;
-import org.springframework.stereotype.Component;
+import org.apache.kafka.streams.kstream.Printed;
+import org.bde.stock.ingestion.message.AssetCandleMessageKey;
+import org.bde.stock.ingestion.message.AssetCandleMessageValue;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import java.time.Duration;
 
 
-@Component
+@Configuration
 public class FiveMinuteAssetCandleAggregator
-    extends AbstractAssetCandleAggregator
+      extends AbstractAssetCandleAggregator
 {
-
-    FiveMinuteAssetCandleAggregator( final KStream<AssetCandleCompactedMessageKey, AssetCandleTableMessageValue> compacted )
+    @Bean( name = "fiveMinuteCandles" )
+    public KStream<AssetCandleMessageKey, AssetCandleMessageValue> fiveMinuteCandleStream( @Qualifier( "singleMinuteCandles" ) final KStream<AssetCandleMessageKey, AssetCandleMessageValue> singleMinuteCandles )
     {
-        this.kstreamAssetCandleAgg( compacted );
+        final var fiveMinuteCandleStream = this.kstreamAssetCandleAgg( singleMinuteCandles,
+                                                                       "asset-candle.five" );
+        fiveMinuteCandleStream.print( Printed.<AssetCandleMessageKey, AssetCandleMessageValue>toSysOut().withLabel( "5 minute candle: " ) );
+        return fiveMinuteCandleStream;
     }
 
+
     @Override
-    Integer getWindowLength()
+    Duration getWindowLength()
     {
-        return 5;
+        return Duration.ofMinutes( 5 );
     }
 
 
