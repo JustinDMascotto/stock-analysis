@@ -2,21 +2,33 @@ package org.bde.stock.ingestion.serde;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.bde.stock.ingestion.message.AssetCandleMessageValue;
+import org.bde.stock.ingestion.model.AssetCandle;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Data
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AssetCandleAggregator
 {
     private ArrayList<AssetCandleMessageValue> agg = new ArrayList<>();
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
+
+    static
+    {
+        MAPPER.registerModule( new JavaTimeModule() );
+    }
 
 
     public AssetCandleAggregator( String jsonString )
@@ -45,6 +57,12 @@ public class AssetCandleAggregator
     public AssetCandleAggregator add( AssetCandleMessageValue log )
     {
         agg.add( log );
+        return this;
+    }
+
+    public AssetCandleAggregator addAll( Collection<AssetCandleMessageValue> list )
+    {
+        agg.addAll( list );
         return this;
     }
 

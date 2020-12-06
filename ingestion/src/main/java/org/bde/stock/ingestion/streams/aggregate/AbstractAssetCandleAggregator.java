@@ -36,7 +36,6 @@ public abstract class AbstractAssetCandleAggregator
 
     abstract Integer getCompositeInterval();
 
-
     public final KStream<AssetCandleMessageKey, AssetCandleMessageValue> kstreamAssetCandleAgg( final KStream<AssetCandleMessageKey, AssetCandleMessageValue> candleStreamIn,
                                                                                                 final String outputTopic )
     {
