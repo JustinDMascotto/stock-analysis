@@ -19,7 +19,7 @@ public class KafkaConfig
     public KafkaStreamsConfiguration kafkaStreamsConfiguration()
     {
         final var props = new HashMap<String,Object>();
-        props.put( StreamsConfig.APPLICATION_ID_CONFIG, "kafka-stream16" );
+        props.put( StreamsConfig.APPLICATION_ID_CONFIG, "kafka-stream19" );
         props.put( StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka:9092" );
 
         return new KafkaStreamsConfiguration( props );

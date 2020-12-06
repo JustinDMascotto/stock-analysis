@@ -33,22 +33,20 @@ public class FiveMinuteWindow
 {
 
     @Bean
-    public KStream<Windowed<String>, AssetCandleAggregator> fifteenMinuteWindow( final StreamsBuilder builder )
+    public KStream<Windowed<String>, AssetCandleAggregator> fifteenMinuteWindow( @Qualifier( "fiveMinuteCandles") final KStream<AssetCandleMessageKey,AssetCandleMessageValue> fiveMinuteStream )
     {
-        final var hopLength = Duration.ofMinutes( 1 );
-        final var windowLength = Duration.ofMinutes( 5 );
+        final var candleSize = Duration.ofMinutes( 5 );
+        final var windowTimeLength = Duration.ofMinutes( 15 );
         final var aggSerde = Serdes.serdeFrom( new AssetCandleAggregatorSerializer(), new AssetCandleAggregateDeserializer() );
-        final var keySerde = new JsonSerde<>( AssetCandleMessageKey.class );
         final var valueSerde = new JsonSerde<>( AssetCandleMessageValue.class );
 
-        final var windowSerde = WindowedSerdes.timeWindowedSerdeFrom( String.class, windowLength.toMillis() );
-        final var windowed = builder.stream( FiveMinuteAssetCandleAggregator.outputTopic,
-                                             Consumed.with( keySerde, valueSerde, new TimestampExtractor(), null ) )
+        final var windowSerde = WindowedSerdes.timeWindowedSerdeFrom( String.class, windowTimeLength.toMillis() );
+        final var windowed = fiveMinuteStream
                                     .filter( ( key, value ) -> key.getInterval() == 5 )
                                     .groupBy( ( key, value ) -> key.getSymbol(),
                                               Grouped.with( Serdes.String(), valueSerde ) )
-                                    .windowedBy( TimeWindows.of( windowLength )
-                                                            .advanceBy( hopLength )
+                                    .windowedBy( TimeWindows.of( windowTimeLength )
+                                                            .advanceBy( candleSize )
                                                             .grace( Duration.ofMillis( 1000 ) ) )
                                     .aggregate( AssetCandleAggregator::new,
                                                 ( key, value, aggregate ) -> {
