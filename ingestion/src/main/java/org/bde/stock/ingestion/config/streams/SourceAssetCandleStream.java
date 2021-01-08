@@ -1,4 +1,4 @@
-package org.bde.stock.ingestion.streams;
+package org.bde.stock.ingestion.config.streams;
 
 
 import org.apache.kafka.streams.StreamsBuilder;

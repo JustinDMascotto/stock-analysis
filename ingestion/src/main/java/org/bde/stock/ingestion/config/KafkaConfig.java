@@ -9,6 +9,7 @@ import org.springframework.kafka.annotation.KafkaStreamsDefaultConfiguration;
 import org.springframework.kafka.config.KafkaStreamsConfiguration;
 
 import java.util.HashMap;
+import java.util.Random;
 
 
 @Configuration
@@ -19,7 +20,7 @@ public class KafkaConfig
     public KafkaStreamsConfiguration kafkaStreamsConfiguration()
     {
         final var props = new HashMap<String,Object>();
-        props.put( StreamsConfig.APPLICATION_ID_CONFIG, "kafka-stream19" );
+        props.put( StreamsConfig.APPLICATION_ID_CONFIG, "kafka-stream" + new Random().nextLong() );
         props.put( StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "kafka:9092" );
 
         return new KafkaStreamsConfiguration( props );
