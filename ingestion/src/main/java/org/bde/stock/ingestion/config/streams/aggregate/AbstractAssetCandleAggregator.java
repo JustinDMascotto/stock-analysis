@@ -1,4 +1,4 @@
-package org.bde.stock.ingestion.streams.aggregate;
+package org.bde.stock.ingestion.config.streams.aggregate;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.common.serialization.Serdes;

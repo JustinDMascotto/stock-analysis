@@ -1,4 +1,4 @@
-package org.bde.stock.ingestion.streams.aggregate;
+package org.bde.stock.ingestion.config.streams.aggregate;
 
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Printed;

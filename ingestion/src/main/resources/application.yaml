@@ -13,4 +13,4 @@ logging:
     org:
       apache:
         kafka:
-          streams: trace
+          streams: info
