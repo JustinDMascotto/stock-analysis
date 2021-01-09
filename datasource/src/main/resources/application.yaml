@@ -1,0 +1,25 @@
+spring:
+  kafka:
+    producer:
+      retries: 3
+      acks: 1
+      retry:
+        backoff:
+          ms: 100
+      linger:
+        ms: 1000
+    bootstrap-servers: kafka:9092
+    properties:
+      max-block-ms: 1000
+    client-id: data-fetcher
+
+org:
+  bde:
+    stock:
+      datasource:
+        symbol: LTCBTC
+        startTime: 1609768800000
+        candle:
+          interval-minutes: 1
+        fetch-interval:
+          cron: 0 * * * * *
