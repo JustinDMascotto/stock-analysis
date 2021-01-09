@@ -14,4 +14,4 @@ logging:
     org:
       apache:
         kafka:
-          streams: info
+          streams: warn

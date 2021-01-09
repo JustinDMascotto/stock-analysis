@@ -12,6 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.support.serializer.JsonSerde;
 
+import java.util.Collections;
+
 
 
 @Configuration
@@ -23,7 +25,9 @@ public class SourceAssetCandleStream
     public KStream<AssetCandleMessageKey, AssetCandleMessageValue> kstreamAssetCandle( final StreamsBuilder builder )
     {
         final var keySerde = new JsonSerde<>( AssetCandleMessageKey.class );
+        keySerde.configure( Collections.emptyMap(), true );
         final var valueSerde = new JsonSerde<>( AssetCandleMessageValue.class );
+        valueSerde.configure( Collections.emptyMap(), false );
 
         // source stream
         KStream<AssetCandleMessageKey, AssetCandleMessageValue> sourceStream = builder.stream( SOURCE_TOPIC,
