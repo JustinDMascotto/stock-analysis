@@ -2,7 +2,6 @@ package org.bde.stock.ingestion.config.streams.windowed;
 
 import org.apache.kafka.common.serialization.Serdes;
 import org.apache.kafka.common.utils.Bytes;
-import org.apache.kafka.streams.kstream.ForeachAction;
 import org.apache.kafka.streams.kstream.Grouped;
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Materialized;
@@ -12,8 +11,8 @@ import org.apache.kafka.streams.kstream.TimeWindows;
 import org.apache.kafka.streams.kstream.Windowed;
 import org.apache.kafka.streams.kstream.WindowedSerdes;
 import org.apache.kafka.streams.state.WindowStore;
-import org.bde.stock.ingestion.message.AssetCandleMessageKey;
-import org.bde.stock.ingestion.message.AssetCandleMessageValue;
+import org.bde.stock.common.message.AssetCandleMessageKey;
+import org.bde.stock.common.message.AssetCandleMessageValue;
 import org.bde.stock.ingestion.serde.AssetCandleAggregateDeserializer;
 import org.bde.stock.ingestion.serde.AssetCandleAggregator;
 import org.bde.stock.ingestion.serde.AssetCandleAggregatorSerializer;
@@ -24,11 +23,9 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.support.serializer.JsonSerde;
 
-import java.awt.Color;
 import java.time.Duration;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.stream.IntStream;
 
 

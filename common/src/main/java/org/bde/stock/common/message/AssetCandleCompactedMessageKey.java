@@ -1,4 +1,4 @@
-package org.bde.stock.ingestion.message;
+package org.bde.stock.common.message;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

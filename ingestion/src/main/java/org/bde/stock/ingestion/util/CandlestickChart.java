@@ -1,7 +1,7 @@
 package org.bde.stock.ingestion.util;
 
 import lombok.Getter;
-import org.bde.stock.ingestion.message.AssetCandleMessageValue;
+import org.bde.stock.common.message.AssetCandleMessageValue;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
