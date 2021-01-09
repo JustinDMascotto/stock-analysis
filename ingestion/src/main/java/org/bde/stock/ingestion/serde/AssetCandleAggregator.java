@@ -7,8 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.bde.stock.ingestion.message.AssetCandleMessageValue;
-import org.bde.stock.ingestion.model.AssetCandle;
+import org.bde.stock.common.message.*;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

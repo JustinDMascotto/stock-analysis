@@ -1,4 +1,4 @@
-package org.bde.stock.ingestion.message;
+package org.bde.stock.common.message;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
@@ -8,13 +8,17 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class AssetCandleMessageValue
+public class AssetCandleTableMessageValue
 {
+    private int interval;
+
+    @JsonFormat( pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
+    private LocalDateTime timestamp;
+
     private double open;
 
     private double close;
@@ -26,9 +30,4 @@ public class AssetCandleMessageValue
     private Double vwap;
 
     private int volume;
-
-    @JsonFormat( pattern = "yyyy-MM-dd'T'HH:mm:ss.SSS")
-    private LocalDateTime timestamp;
-
-    private int interval;
 }

@@ -2,16 +2,12 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'application'
 apply plugin: 'com.avast.gradle.docker-compose'
 
-mainClassName = 'org.bde.stock.ingestion.Application'
+mainClassName = 'org.bde.stock.datasource.Application'
 
 springBoot {
     buildInfo()
 }
 
-bootRun {
-    systemProperty 'java.awt.headless', 'false'
-    jvmArgs += "-Djava.awt.headless=false"
-}
 
 dependencies {
 

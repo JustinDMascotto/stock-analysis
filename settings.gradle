@@ -1,4 +1,6 @@
 rootProject.name = 'stocks-analysis'
 include ':chart-generator'
 include 'ingestion'
+include 'common'
+include 'datasource'
 
