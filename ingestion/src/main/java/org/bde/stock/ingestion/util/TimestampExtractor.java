@@ -1,8 +1,7 @@
 package org.bde.stock.ingestion.util;
 
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.bde.stock.ingestion.message.AssetCandleMessageKey;
-import org.bde.stock.ingestion.message.AssetCandleMessageValue;
+import org.bde.stock.common.message.AssetCandleMessageValue;
 
 import java.time.ZoneOffset;
 

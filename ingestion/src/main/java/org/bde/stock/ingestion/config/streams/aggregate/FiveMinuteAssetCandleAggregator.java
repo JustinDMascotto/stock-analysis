@@ -2,8 +2,8 @@ package org.bde.stock.ingestion.config.streams.aggregate;
 
 import org.apache.kafka.streams.kstream.KStream;
 import org.apache.kafka.streams.kstream.Printed;
-import org.bde.stock.ingestion.message.AssetCandleMessageKey;
-import org.bde.stock.ingestion.message.AssetCandleMessageValue;
+import org.bde.stock.common.message.AssetCandleMessageKey;
+import org.bde.stock.common.message.AssetCandleMessageValue;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
