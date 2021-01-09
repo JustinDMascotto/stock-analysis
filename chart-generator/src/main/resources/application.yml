@@ -1,11 +1,12 @@
 spring:
   application:
-    name: stock-analysis
-  datasource:
-    type: org.apache.tomcat.jdbc.pool.DataSource
-  liquibase:
-    enabled: true
-    change-log: classpath:db/changelog/db.changelog-master.yaml
+    name: chart-generator
+  main:
+    banner-mode: off
+  kafka:
+    listener:
+      missing-topics-fatal: false
+    bootstrap-servers: kafka:9092
 
 bde:
   stock-analysis:

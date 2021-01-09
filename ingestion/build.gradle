@@ -26,10 +26,6 @@ dependencies {
     api group: 'org.apache.commons', name: 'commons-collections4', version: '4.0'
     api group: 'commons-io', name: 'commons-io', version: '2.6'
 
-    api group: 'com.github.vladimir-bukhtoyarov', name: 'bucket4j-core', version: '4.6.0'
-
-    api group: 'jfree', name: 'jfreechart', version: '1.0.13'
-
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }
 

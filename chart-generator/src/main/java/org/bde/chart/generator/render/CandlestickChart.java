@@ -1,7 +1,7 @@
-package org.bde.chart.generator.service.component;
+package org.bde.chart.generator.render;
 
 import lombok.Getter;
-import org.bde.chart.generator.entity.StockCandleEntity;
+import org.bde.stock.common.message.AssetCandleMessageValue;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
@@ -22,6 +22,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.text.DecimalFormat;
+
 
 public class CandlestickChart
       extends JPanel
@@ -66,6 +67,7 @@ public class CandlestickChart
         candlestickSubplot.setBackgroundPaint( Color.WHITE );
         candlestickSubplot.setRangeGridlinesVisible( false );
         candlestickSubplot.setDomainGridlinesVisible( false );
+        candlestickSubplot.setOutlinePaint( null );
 
         /**
          * Creating volume subplot
@@ -76,15 +78,16 @@ public class CandlestickChart
         volumeDataset.addSeries( volumeSeries );
         // Create volume chart volumeAxis
         final NumberAxis volumeAxis = new NumberAxis();
-        volumeAxis.setAutoRangeIncludesZero( false );
+//        volumeAxis.setAutoRangeIncludesZero( false );
+
         // Set to no decimal
         volumeAxis.setNumberFormatOverride( new DecimalFormat( "0" ) );
-        volumeAxis.setTickMarksVisible( false );
-        volumeAxis.setTickLabelsVisible( false );
+//        volumeAxis.setTickMarksVisible( false );
+//        volumeAxis.setTickLabelsVisible( false );
 
         // Create volume chart renderer
         XYBarRenderer timeRenderer = new XYBarRenderer();
-        timeRenderer.setShadowVisible( false );
+//        timeRenderer.setShadowVisible( false );
         // Create volumeSubplot
 
         final ValueAxis axis = new NumberAxis();
@@ -92,18 +95,19 @@ public class CandlestickChart
         final XYPlot volumeSubplot = new XYPlot( volumeDataset, axis, volumeAxis, timeRenderer );
 
         volumeSubplot.setBackgroundPaint( Color.WHITE );
-        volumeSubplot.setDomainGridlinesVisible( false );
-        volumeSubplot.setRangeGridlinesVisible( false );
+//        volumeSubplot.setDomainGridlinesVisible( false );
+//        volumeSubplot.setRangeGridlinesVisible( false );
 
         /**
          * Create chart main plot with two subplots (candlestickSubplot,volumeSubplot)
          */
         // Create mainPlot
         final CombinedDomainXYPlot mainPlot = new CombinedDomainXYPlot();
-//        mainPlot.setGap( 10.0 );
-        mainPlot.add( candlestickSubplot );
-//        mainPlot.add( candlestickSubplot, 3 );
-//        mainPlot.add( volumeSubplot, 2 );
+        mainPlot.setOutlinePaint( null );
+        mainPlot.setGap( 10.0 );
+//        mainPlot.add( candlestickSubplot );
+        mainPlot.add( candlestickSubplot, 3 );
+        mainPlot.add( volumeSubplot, 2 );
         mainPlot.setOrientation( PlotOrientation.VERTICAL );
 
         JFreeChart chart = new JFreeChart( mainPlot );
@@ -115,7 +119,7 @@ public class CandlestickChart
     /**
      * Fill series with data.
      */
-    public void addCandle( final StockCandleEntity candle,
+    public void addCandle( final AssetCandleMessageValue candle,
                            final Long index )
     {
         // Add bar to the data. Let's repeat the same bar

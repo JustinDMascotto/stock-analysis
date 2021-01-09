@@ -21,7 +21,7 @@ public class SourceAssetCandleStream
 {
     public static final String SOURCE_TOPIC = "asset-candle";
 
-    @Bean( name = "singleMinuteCandles")
+    @Bean( name = "candleSource" )
     public KStream<AssetCandleMessageKey, AssetCandleMessageValue> kstreamAssetCandle( final StreamsBuilder builder )
     {
         final var keySerde = new JsonSerde<>( AssetCandleMessageKey.class );
@@ -33,7 +33,7 @@ public class SourceAssetCandleStream
         KStream<AssetCandleMessageKey, AssetCandleMessageValue> sourceStream = builder.stream( SOURCE_TOPIC,
                                                                                                Consumed.with( keySerde, valueSerde, new TimestampExtractor(), null ) );
 
-        sourceStream.print( Printed.<AssetCandleMessageKey, AssetCandleMessageValue>toSysOut().withLabel( "Json serde original stream " ) );
+        sourceStream.print( Printed.<AssetCandleMessageKey, AssetCandleMessageValue>toSysOut().withLabel( "Candle Stream" ) );
 
         return sourceStream;
     }

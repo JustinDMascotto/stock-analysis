@@ -1,4 +1,9 @@
 dependencies {
-    api 'com.fasterxml.jackson.core:jackson-annotations:2.10.2'
+    api group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: '2.10.2'
+    api group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.10.2'
+    api group: 'com.fasterxml.jackson.datatype', name: 'jackson-datatype-jsr310', version: '2.10.2'
+    api group: 'org.apache.commons', name: 'commons-lang3', version: '3.9'
+    api group: 'org.springframework.kafka', name: 'spring-kafka'
+    api group: 'org.apache.kafka', name: 'kafka-streams'
     testCompile group: 'junit', name: 'junit', version: '4.12'
 }

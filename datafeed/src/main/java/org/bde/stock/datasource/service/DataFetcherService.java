@@ -161,7 +161,7 @@ public class DataFetcherService
                                                        @Override
                                                        public void onSuccess( final SendResult<AssetCandleMessageKey, AssetCandleMessageValue> result )
                                                        {
-                                                           log.debug( "Sent candle with timestamp " + result.getProducerRecord().value().getTimestamp() );
+                                                           log.info( "Sent candle with timestamp " + result.getProducerRecord().value().getTimestamp() );
                                                            previousEndTime = result.getProducerRecord().value().getTimestamp().toInstant( ZoneOffset.UTC ).toEpochMilli();
                                                        }
                                                    } ) );

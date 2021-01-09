@@ -1,4 +1,4 @@
-package org.bde.stock.ingestion.serde;
+package org.bde.stock.common.kafka.serde;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

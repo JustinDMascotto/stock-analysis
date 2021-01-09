@@ -15,13 +15,13 @@ import java.time.Duration;
 public class FiveMinuteAssetCandleAggregator
       extends AbstractAssetCandleAggregator
 {
-    public static final String outputTopic = "asset-candle.five";
+    public static final String outputTopic = "asset-candle";
 
     @Bean( name = "fiveMinuteCandles" )
-    public KStream<AssetCandleMessageKey, AssetCandleMessageValue> fiveMinuteCandleStream( @Qualifier( "singleMinuteCandles" ) final KStream<AssetCandleMessageKey, AssetCandleMessageValue> singleMinuteCandles )
+    public KStream<AssetCandleMessageKey, AssetCandleMessageValue> fiveMinuteCandleStream( @Qualifier( "candleSource" ) final KStream<AssetCandleMessageKey, AssetCandleMessageValue> singleMinuteCandles )
     {
         final var fiveMinuteCandleStream = this.kstreamAssetCandleAgg( singleMinuteCandles, outputTopic );
-        fiveMinuteCandleStream.print( Printed.<AssetCandleMessageKey, AssetCandleMessageValue>toSysOut().withLabel( "5 minute candle: " ) );
+        fiveMinuteCandleStream.print( Printed.<AssetCandleMessageKey, AssetCandleMessageValue>toSysOut().withLabel( "5 minute candle" ) );
         return fiveMinuteCandleStream;
     }
 

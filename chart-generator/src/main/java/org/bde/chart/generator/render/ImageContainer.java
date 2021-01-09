@@ -1,4 +1,4 @@
-package org.bde.stock.ingestion.util;
+package org.bde.chart.generator.render;
 
 
 import lombok.Getter;

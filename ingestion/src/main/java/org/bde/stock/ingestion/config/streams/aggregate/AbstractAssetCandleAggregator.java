@@ -45,7 +45,7 @@ public abstract class AbstractAssetCandleAggregator
                                                .windowedBy( window )
                                                .reduce( this::composeCandles,
                                                         Materialized.<String, AssetCandleMessageValue, WindowStore<Bytes, byte[]>>
-                                                              as( "IntervalStore" + getWindowLength() )
+                                                              as( "CandleAggStore" + getWindowLength() )
                                                               .withKeySerde( Serdes.String() )
                                                               .withValueSerde( valueSerde ) )
                                                .suppress( Suppressed.untilWindowCloses( Suppressed.BufferConfig.unbounded() ) )

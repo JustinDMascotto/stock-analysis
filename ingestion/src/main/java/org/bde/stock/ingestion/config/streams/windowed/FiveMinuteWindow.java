@@ -13,36 +13,35 @@ import org.apache.kafka.streams.kstream.WindowedSerdes;
 import org.apache.kafka.streams.state.WindowStore;
 import org.bde.stock.common.message.AssetCandleMessageKey;
 import org.bde.stock.common.message.AssetCandleMessageValue;
-import org.bde.stock.ingestion.serde.AssetCandleAggregateDeserializer;
-import org.bde.stock.ingestion.serde.AssetCandleAggregator;
-import org.bde.stock.ingestion.serde.AssetCandleAggregatorSerializer;
-import org.bde.stock.ingestion.util.CandlestickChart;
-import org.bde.stock.ingestion.util.ImageContainer;
+import org.bde.stock.common.kafka.serde.AssetCandleAggregateDeserializer;
+import org.bde.stock.common.kafka.serde.AssetCandleAggregator;
+import org.bde.stock.common.kafka.serde.AssetCandleAggregatorSerializer;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.support.serializer.JsonSerde;
 
 import java.time.Duration;
-import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.stream.IntStream;
 
 
 @Configuration
 public class FiveMinuteWindow
 {
 
+    @Value( "${org.bde.stock.window.five.length}" )
+    private Integer windowLength;
+
     @Bean
-    public KStream<Windowed<String>, AssetCandleAggregator> fifteenMinuteWindow( @Qualifier( "fiveMinuteCandles") final KStream<AssetCandleMessageKey,AssetCandleMessageValue> fiveMinuteStream )
+    public KStream<Windowed<String>, AssetCandleAggregator> fifteenMinuteWindow( @Qualifier( "candleSource") final KStream<AssetCandleMessageKey,AssetCandleMessageValue> candleSource )
     {
         final var candleSize = Duration.ofMinutes( 5 );
-        final var windowTimeLength = Duration.ofMinutes( 25 );
+        final var windowTimeLength = Duration.ofMinutes( windowLength );
         final var aggSerde = Serdes.serdeFrom( new AssetCandleAggregatorSerializer(), new AssetCandleAggregateDeserializer() );
         final var valueSerde = new JsonSerde<>( AssetCandleMessageValue.class );
 
         final var windowSerde = WindowedSerdes.timeWindowedSerdeFrom( String.class, windowTimeLength.toMillis() );
-        final var windowed = fiveMinuteStream
+        final var windowed = candleSource
                                     .filter( ( key, value ) -> key.getInterval() == 5 )
                                     .groupBy( ( key, value ) -> key.getSymbol(),
                                               Grouped.with( Serdes.String(), valueSerde ) )
@@ -55,27 +54,13 @@ public class FiveMinuteWindow
                                                     return aggregate;
                                                 },
                                                 Materialized.<String, AssetCandleAggregator, WindowStore<Bytes, byte[]>>
-                                                      as( "store" )
+                                                      as( "WindowedStoreFive" )
                                                       .withKeySerde( Serdes.String() )
                                                       .withValueSerde( aggSerde ) )
                                     .toStream();
 
-        windowed.to( "asset-candle.five.window", Produced.with( windowSerde, aggSerde ) );
-        windowed.print( Printed.<Windowed<String>, AssetCandleAggregator>toSysOut().withLabel( "Window: " ) );
-        windowed.peek( ( key, value ) -> {
-            if ( value.getAgg().size() == 5 )
-            {
-                final CandlestickChart chart = new CandlestickChart();
-                IntStream.range( 1, value.getAgg().size() + 1 )
-                         .forEach( i -> {
-                             final var candle = value.getAgg().get( i - 1 );
-                             chart.addCandle( candle, (long) i );
-                         } );
-//                    chart.setBorder( null );
-//                    chart.setForeground( Color.WHITE );
-                ImageContainer.toImage( new ImageContainer( Arrays.asList( chart ) ).getContentPane(),"/Users/justinmascotto/Downloads/images/" + key.key() + "_" + value.getAgg().get( value.getAgg().size() - 1 ).getTimestamp().format( DateTimeFormatter.ofPattern( "yyyy.MM.dd'T'HH.mm.ss" )  ) + ".png" );
-            }
-        } );
+        windowed.to( "asset-candle.window.five", Produced.with( windowSerde, aggSerde ) );
+        windowed.print( Printed.<Windowed<String>, AssetCandleAggregator>toSysOut().withLabel( "Window 5 minute" ) );
         return windowed;
     }
 }
