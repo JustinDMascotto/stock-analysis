@@ -3,4 +3,5 @@ include ':chart-generator'
 include 'ingestion'
 include 'common'
 include 'datafeed'
+include 'image-labeler'
 

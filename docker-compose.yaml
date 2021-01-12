@@ -69,6 +69,7 @@ services:
                        kafka-topics --create --topic asset-candle.grouped --if-not-exists --zookeeper zookeeper:32181 --partitions 4 --replication-factor 1 \
                        --config 'cleanup.policy=compact' --config 'delete.retention.ms=100' --config 'segment.ms=100' --config 'min.cleanable.dirty.ratio=0.01' && \
                        kafka-topics --create --topic asset-candle.window.five --if-not-exists --zookeeper zookeeper:32181 --partitions 4 --replication-factor 1 && \
+                       kafka-topics --create --topic asset-candle.window.hour --if-not-exists --zookeeper zookeeper:32181 --partitions 4 --replication-factor 1 && \
                        sleep infinity'"
     environment:
       # The following settings are listed here only to satisfy the image's requirements.

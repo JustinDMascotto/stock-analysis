@@ -18,8 +18,8 @@ org:
     stock:
       datasource:
         symbol: LTCBTC
-        startTime: 1610209978000
+        startTime: 1609462800000
         candle:
-          interval-minutes: 1
+          interval-minutes: 60
         fetch-interval:
           cron: 0 * * * * *

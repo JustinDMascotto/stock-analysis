@@ -1,0 +1,20 @@
+spring:
+  main:
+    banner-mode: off
+  kafka:
+    listener:
+      missing-topics-fatal: false
+    bootstrap-servers: kafka:9092
+
+org:
+  bde:
+    stock:
+      image:
+        labeler:
+          topic: asset-candle.window.hour
+          look-forward:
+            minutes: 120
+          candle-interval:
+            minutes: 60
+          window-length:
+            minutes: 720
